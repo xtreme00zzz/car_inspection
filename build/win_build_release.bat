@@ -75,6 +75,16 @@ echo [6/6] Build complete.
 echo   Onedir dist : dist\%APP_NAME%
 echo   Onefile exe : dist\%APP_NAME%.exe
 echo   Payload root: dist\release_payload
+echo.
+REM Optional: Compile installer if ISCC.exe is available
+for %%X in (iscc.exe ISCC.exe) do (
+  where %%X >nul 2>nul && (
+    echo [Extra] Compiling installer with Inno Setup...
+    call build\run_iscc.bat
+    goto :done_iscc
+  )
+)
+:done_iscc
 popd
 exit /b 0
 
@@ -82,4 +92,3 @@ exit /b 0
 echo Release build failed with errorlevel %errorlevel%.
 popd
 exit /b %errorlevel%
-
