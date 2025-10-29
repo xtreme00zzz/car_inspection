@@ -76,6 +76,17 @@ echo [6/6] Generating installer branding assets...
 call "%REPO%\.venv-alpha-win\Scripts\python.exe" "%REPO%\build\generate_branding_assets.py"
 if errorlevel 1 goto :error
 
+echo [7/6] Building updater stub...
+call "%REPO%\.venv-alpha-win\Scripts\python.exe" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console ^
+  --name "eF Drift Car Scrutineer Updater" ^
+  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-beta-updater" --specpath "%REPO%\build" ^
+  "%REPO%\tools\windows_updater_stub.py"
+if errorlevel 1 goto :error
+
+rem Place updater stub alongside both onedir and in payload
+copy /Y "%REPO%\dist\eF Drift Car Scrutineer Updater.exe" "%REPO%\dist\%APP_NAME%\eF Drift Car Scrutineer Updater.exe" >nul
+copy /Y "%REPO%\dist\eF Drift Car Scrutineer Updater.exe" "%REPO%\dist\beta_payload\eF Drift Car Scrutineer Updater.exe" >nul
+
 echo Build complete.
 echo   Onedir dist : dist\%APP_NAME%
 echo   Onefile exe : dist\%APP_NAME%.exe

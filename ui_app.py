@@ -1090,9 +1090,22 @@ class InspectorUI(tk.Tk):
             mr = tk.Menu(m, tearoff=0)
             mr.add_command(label='Settings...', command=self.open_settings_dialog)
             m.add_cascade(label='Rules', menu=mr)
+            # Help menu
+            mh = tk.Menu(m, tearoff=0)
+            mh.add_command(label='Check for Updates…', command=self.menu_check_updates)
+            m.add_cascade(label='Help', menu=mh)
             self.config(menu=m)
         except Exception:
             pass
+
+    def menu_check_updates(self):
+        try:
+            updater.check_for_update_synchronously(self, manual=True)
+        except Exception:
+            try:
+                messagebox.showinfo('Update', 'Update check failed.')
+            except Exception:
+                pass
 
     def load_settings(self):
         try:
@@ -5211,8 +5224,8 @@ if __name__ == '__main__':
     app = InspectorUI()
     app.geometry('900x700')
     try:
-        if str(UPDATE_CHANNEL).lower() == 'beta':
-            updater.maybe_check_for_updates_in_background(app)
+        # Always check based on configured update channel
+        updater.maybe_check_for_updates_in_background(app)
     except Exception:
         pass
     app.mainloop()

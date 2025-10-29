@@ -52,4 +52,5 @@ Automatic Update (Beta)
 - Set the beta version in `app_version.py` (e.g., `APP_VERSION = "BETA-0.1.1"`). The beta build script stamps this into `dist\\beta_payload\\VERSION.txt`.
 - Create a GitHub pre-release tagged with the same version string (e.g., `BETA-0.1.1`).
 - Upload the one-file asset named `eF Drift Car Scrutineer Beta.exe` to the pre-release. The app prefers this asset for beta updates.
-- On app launch, beta builds check for a newer pre-release and prompt users to download and run the update. Downloads are saved to `%LOCALAPPDATA%\\eFDriftScrutineer\\updates`.
+- On app launch, beta builds check for a newer pre-release and prompt users to download and install. Downloads are saved to `%LOCALAPPDATA%\\eFDriftScrutineer\\updates`.
+- The Windows updater stub (`eF Drift Car Scrutineer Updater.exe`) is built and copied next to the app executable. It replaces the running EXE after the app exits, then relaunches.

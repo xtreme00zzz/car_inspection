@@ -108,3 +108,17 @@ Write-Host "  Payload root : $payloadRoot"
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  iscc.exe build\installer_alpha.iss" -ForegroundColor Yellow
+
+# Build updater stub (Windows)
+try {
+    Write-Host "[Extra] Building updater stub..." -ForegroundColor Cyan
+    & python -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console `
+        --name "eF Drift Car Scrutineer Updater" `
+        --distpath $distDir --workpath (Join-Path $repoRoot "build\pyinstaller-build-updater-alpha") --specpath $specPath `
+        (Join-Path $repoRoot "tools\windows_updater_stub.py")
+    # Put updater next to onedir app and into payload
+    Copy-Item -Force -Path (Join-Path $distDir "eF Drift Car Scrutineer Updater.exe") -Destination (Join-Path $onedirOutput "eF Drift Car Scrutineer Updater.exe") -ErrorAction Ignore
+    Copy-Item -Force -Path (Join-Path $distDir "eF Drift Car Scrutineer Updater.exe") -Destination (Join-Path $payloadRoot "eF Drift Car Scrutineer Updater.exe") -ErrorAction Ignore
+} catch {
+    Write-Warning "Updater stub build failed: $_"
+}
