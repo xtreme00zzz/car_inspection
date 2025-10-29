@@ -1,0 +1,32 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": false
+  },
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#161616"
+    ]
+  },
+  "rims": {
+    "enabled": true,
+    "colors": [
+      "#2B2B2B"
+    ]
+  },
+  "rollCage": {
+    "enabled": true,
+    "colors": [
+      "#2B2B2B"
+    ]
+  },
+  "windows": {
+    "alpha": 0.23,
+    "enabled": false,
+    "colors": [
+      "#293437"
+    ]
+  }
+}

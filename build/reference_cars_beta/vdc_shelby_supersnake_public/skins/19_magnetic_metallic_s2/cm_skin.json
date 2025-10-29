@@ -1,0 +1,15 @@
+{
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#3A3A3A"
+    ]
+  },
+  "windows": {
+    "alpha": 0.23,
+    "enabled": false,
+    "colors": [
+      "#293437"
+    ]
+  }
+}

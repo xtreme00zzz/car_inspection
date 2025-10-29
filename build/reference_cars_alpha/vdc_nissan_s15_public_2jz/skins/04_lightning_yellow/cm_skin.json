@@ -1,0 +1,14 @@
+{
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#212121"
+    ]
+  },
+  "rollCage": {
+    "enabled": true,
+    "colors": [
+      "#424242"
+    ]
+  }
+}

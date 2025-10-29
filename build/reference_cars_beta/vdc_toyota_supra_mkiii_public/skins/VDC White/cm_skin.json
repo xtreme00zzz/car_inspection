@@ -1,0 +1,31 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 1.0,
+    "enabled": true
+  },
+  "carpet": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "interior": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "leatherColored": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rollCage": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#212121"
+    ]
+  },
+  "interior": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rollCage": {
+    "enabled": true,
+    "colors": [
+      "#424242"
+    ]
+  },
+  "windows": {
+    "alpha": 0.23,
+    "enabled": false,
+    "colors": [
+      "#293437"
+    ]
+  }
+}

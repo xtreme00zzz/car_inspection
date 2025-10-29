@@ -1,0 +1,25 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": true
+  },
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#223573"
+    ]
+  },
+  "cylinderHeadCover": {
+    "enabled": false,
+    "colors": [
+      "#FF0000"
+    ]
+  },
+  "rollCage": {
+    "enabled": true,
+    "colors": [
+      "#223573"
+    ]
+  }
+}

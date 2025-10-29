@@ -1,0 +1,19 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": false
+  },
+  "carpet": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rollCage": {
+    "enabled": true,
+    "colors": [
+      "#06E2DF"
+    ]
+  }
+}

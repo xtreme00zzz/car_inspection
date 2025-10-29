@@ -1,0 +1,13 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": false
+  },
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#424242"
+    ]
+  }
+}

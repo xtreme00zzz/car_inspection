@@ -1,0 +1,59 @@
+{
+  "01CarPaint": {
+    "complex": false,
+    "reflection": 1.0,
+    "gloss": 1.0,
+    "specular": 1.0,
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": false
+  },
+  "02InteriorFloor": {
+    "enabled": false,
+    "colors": [
+      "#E70000"
+    ]
+  },
+  "03Rollcage": {
+    "enabled": false,
+    "colors": [
+      "#E70000"
+    ]
+  },
+  "04Rims": {
+    "enabled": true,
+    "colors": [
+      "#B8FE00"
+    ]
+  },
+  "05BashBars": {
+    "enabled": false,
+    "colors": [
+      "#E70000"
+    ]
+  },
+  "06FrontLightsCovers": {
+    "enabled": false,
+    "colors": [
+      "#E70000"
+    ]
+  },
+  "07InteriorColoredThings": {
+    "enabled": false,
+    "colors": [
+      "#E70000"
+    ]
+  },
+  "08RimsStick": {
+    "enabled": false,
+    "colors": [
+      "#49A1FF"
+    ]
+  },
+  "09ColoredSplitters": {
+    "enabled": false,
+    "colors": [
+      "#E70000"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.cache/
+.venv*/
+
+build/pyinstaller-build*/
+build/pyinstaller-build-beta*/
+build/pyinstaller-build-beta-onefile/
+build/pyinstaller-build-onefile/
+dist/
+reference_cars/
+reports/
+
+*.log
+
+# Ignore platform-specific files
+.DS_Store
+Thumbs.db

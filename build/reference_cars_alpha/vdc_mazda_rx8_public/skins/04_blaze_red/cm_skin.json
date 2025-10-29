@@ -1,0 +1,32 @@
+{
+  "calipers": {
+    "enabled": true,
+    "colors": [
+      "#B50000"
+    ]
+  },
+  "carPaint": {
+    "color": "#FF212121",
+    "flakes": 0.0,
+    "enabled": true
+  },
+  "carPaint2": {
+    "enabled": true,
+    "colors": [
+      "#212121"
+    ]
+  },
+  "leather": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "windows": {
+    "alpha": 0.23,
+    "enabled": false,
+    "colors": [
+      "#293437"
+    ]
+  }
+}

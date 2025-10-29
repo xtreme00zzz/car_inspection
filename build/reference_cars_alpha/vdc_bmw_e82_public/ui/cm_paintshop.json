@@ -1,0 +1,78 @@
+{
+  "vdc_bmw_1m_public": [
+   { 
+  "type": "carPaint", 
+  "name": "01. Car Paint",
+  "texture": "metal_detail_1.dds", 
+  "mapsTexture": "carpaint_diffuse.dds", 
+  "mapsAutoLevel": true, 
+  "defaultColor": "#FFFFFF" 
+},
+
+{
+   "type": "color", 
+  "name": "02. Interior Floor",
+  "texture": "metal_detail_3.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+{
+   "type": "color", 
+  "name": "03. Rollcage",
+  "texture": "metal_detail_8.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+{
+   "type": "color", 
+  "name": "04. Rims",
+  "texture": "rim_detail.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+
+{
+   "type": "color", 
+  "name": "05. Bash Bars",
+  "texture": "metal_detail_4.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+
+{
+   "type": "color", 
+  "name": "06. Front Lights Covers",
+  "texture": "metal_detail_5.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+
+{
+   "type": "color", 
+  "name": "07. Interior Colored Things",
+  "texture": "metal_detail_2.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+{
+   "type": "color", 
+  "name": "08. Rims Stick",
+  "texture": "metal_detail_66.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+
+{
+   "type": "color", 
+  "name": "09. Colored Splitters",
+  "texture": "metal_detail_7.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+  ],
+}
+
+
+
+
+

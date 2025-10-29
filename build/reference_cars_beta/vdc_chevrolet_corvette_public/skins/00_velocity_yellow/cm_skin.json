@@ -1,0 +1,26 @@
+{
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#3D3D3D"
+    ]
+  },
+  "leather1": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "leatherColored": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rims": {
+    "enabled": false,
+    "colors": [
+      "#EA0000"
+    ]
+  }
+}

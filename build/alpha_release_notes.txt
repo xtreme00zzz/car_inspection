@@ -1,0 +1,6 @@
+eF Drift Car Scrutineer — Alpha Release
+======================================
+1) Click Next
+2) Start the app
+3) Login via Discord
+4) Browse a car to validate

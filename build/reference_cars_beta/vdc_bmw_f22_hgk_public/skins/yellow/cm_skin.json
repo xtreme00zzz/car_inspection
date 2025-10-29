@@ -1,0 +1,20 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": true
+  },
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#3F3F3F"
+    ]
+  },
+  "windows": {
+    "alpha": 0.23,
+    "enabled": false,
+    "colors": [
+      "#293437"
+    ]
+  }
+}

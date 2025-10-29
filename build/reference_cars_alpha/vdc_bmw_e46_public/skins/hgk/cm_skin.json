@@ -1,0 +1,37 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.99,
+    "enabled": true
+  },
+  "carpet": {
+    "enabled": true,
+    "colors": [
+      "#000000"
+    ]
+  },
+  "rims": {
+    "enabled": true,
+    "colors": [
+      "#000000"
+    ]
+  },
+  "rims2": {
+    "enabled": true,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rims3": {
+    "enabled": true,
+    "colors": [
+      "#303030"
+    ]
+  },
+  "rims4": {
+    "enabled": true,
+    "colors": [
+      "#000000"
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "carPaint": {
+    "color": "#FFFFFFFF",
+    "flakes": 0.777,
+    "enabled": true
+  },
+  "carpet": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rims": {
+    "enabled": true,
+    "colors": [
+      "#262626"
+    ]
+  },
+  "rims2": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rims3": {
+    "enabled": true,
+    "colors": [
+      "#0571BF"
+    ]
+  },
+  "rims4": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  },
+  "rollCage": {
+    "enabled": false,
+    "colors": [
+      "#FFFFFF"
+    ]
+  }
+}

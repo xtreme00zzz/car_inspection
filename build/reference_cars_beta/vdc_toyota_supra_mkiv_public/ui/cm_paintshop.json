@@ -1,0 +1,40 @@
+{
+  "sab23_evox_grbroad": [
+   { 
+  "type": "carPaint", 
+  "name": "01. Car Paint",
+  "texture": "metal_detail.dds", 
+  "mapsTexture": "ext_body_ao.dds", 
+  "mapsAutoLevel": true, 
+  "defaultColor": "#FFFFFF" 
+},
+
+
+{
+   "type": "color", 
+  "name": "02. Rollcage",
+  "texture": "metal_detail_rollcage.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+{
+   "type": "color", 
+  "name": "03. Rims",
+  "texture": "Metal_detail_Rims.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+
+
+{
+   "type": "color", 
+  "name": "04. Calipers",
+  "texture": "Calipers_COLOR.dds", 
+  "defaultColor": "#FFFFFF" 
+},
+],
+}
+
+
+
+
+

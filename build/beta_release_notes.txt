@@ -1,0 +1,11 @@
+eF Drift Car Scrutineer — Beta Preview 0.1.0
+============================================
+
+Highlights
+----------
+- Enforces the new EFDC prefix requirement for submitted car folders, blocking inspections for incorrectly named entries and surfacing the status in generated reports.
+
+Notes
+-----
+- This is the first beta drop. Expect follow-up builds to expand on additional competition checks and quality-of-life improvements.
+- Reference data and tooling remain identical to the latest alpha; regenerate payload assets before packaging a release.
