@@ -64,7 +64,13 @@ xcopy /E /I /Y "%REPO%\dist\%APP_NAME%" "%REPO%\dist\beta_payload\app" >nul
 copy /Y "%REPO%\dist\%APP_NAME%.exe" "%REPO%\dist\beta_payload\%APP_NAME%.exe" >nul
 copy /Y "%REPO%\build\beta_release_notes.txt" "%REPO%\dist\beta_payload\docs\beta_release_notes.txt" >nul
 copy /Y "%REPO%\README.md" "%REPO%\dist\beta_payload\docs\README.md" >nul
-echo eF Drift Car Scrutineer BETA-0.1.0>"%REPO%\dist\beta_payload\VERSION.txt"
+rem Resolve app version from app_version.py
+set "APPVER="
+for /f "usebackq delims=" %%v in (`"%REPO%\.venv-alpha-win\Scripts\python.exe" -c "import app_version; print(app_version.APP_VERSION)"`) do set "APPVER=%%v"
+if not defined APPVER (
+  set "APPVER=BETA-0.1.0"
+)
+echo eF Drift Car Scrutineer %APPVER%>"%REPO%\dist\beta_payload\VERSION.txt"
 
 echo [6/6] Generating installer branding assets...
 call "%REPO%\.venv-alpha-win\Scripts\python.exe" "%REPO%\build\generate_branding_assets.py"

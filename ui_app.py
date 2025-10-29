@@ -17,6 +17,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter import ttk
 import webbrowser
+from app_version import UPDATE_CHANNEL
+import updater
 
 from inspector.reference_index import build_reference_index, save_index
 from inspector.matcher import build_fingerprint_index
@@ -5208,4 +5210,9 @@ class InspectorUI(tk.Tk):
 if __name__ == '__main__':
     app = InspectorUI()
     app.geometry('900x700')
+    try:
+        if str(UPDATE_CHANNEL).lower() == 'beta':
+            updater.maybe_check_for_updates_in_background(app)
+    except Exception:
+        pass
     app.mainloop()

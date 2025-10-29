@@ -45,3 +45,11 @@ Installer Branding
 ------------------
 
 The existing `build/generate_branding_assets.py` script remains suitable. Run it as part of the build to refresh installer graphics that include the beta tag.
+
+Automatic Update (Beta)
+-----------------------
+
+- Set the beta version in `app_version.py` (e.g., `APP_VERSION = "BETA-0.1.1"`). The beta build script stamps this into `dist\\beta_payload\\VERSION.txt`.
+- Create a GitHub pre-release tagged with the same version string (e.g., `BETA-0.1.1`).
+- Upload the one-file asset named `eF Drift Car Scrutineer Beta.exe` to the pre-release. The app prefers this asset for beta updates.
+- On app launch, beta builds check for a newer pre-release and prompt users to download and run the update. Downloads are saved to `%LOCALAPPDATA%\\eFDriftScrutineer\\updates`.
