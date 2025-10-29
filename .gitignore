@@ -6,9 +6,9 @@ __pycache__/
 .venv*/
 
 build/pyinstaller-build*/
-build/pyinstaller-build-beta*/
-build/pyinstaller-build-beta-onefile/
 build/pyinstaller-build-onefile/
+build/pyinstaller-build-release*/
+build/pyinstaller-build-*-updater/
 dist/
 reference_cars/
 reports/

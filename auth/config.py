@@ -42,23 +42,35 @@ DISCORD_INVITE_URL: str | None = _env("DISCORD_INVITE_URL", "https://discord.gg/
 def _default_cache_root() -> Path:
     """Return a user-writable cache directory for this app.
 
-    - On Windows: %LocalAppData%/eF Drift Car Scrutineer Alpha
-    - On macOS: ~/Library/Caches/eF Drift Car Scrutineer Alpha
-    - On Linux: $XDG_CACHE_HOME/ef-drift-scrutineer-alpha or ~/.cache/ef-drift-scrutineer-alpha
+    - On Windows: %LocalAppData%/eF Drift Car Scrutineer
+    - On macOS: ~/Library/Caches/eF Drift Car Scrutineer
+    - On Linux: $XDG_CACHE_HOME/ef-drift-scrutineer or ~/.cache/ef-drift-scrutineer
     """
-    app_dir_name_win = "eF Drift Car Scrutineer Alpha"
-    app_dir_name_unix = "ef-drift-scrutineer-alpha"
+    app_dir_name_win = "eF Drift Car Scrutineer"
+    app_dir_name_unix = "ef-drift-scrutineer"
+    # Legacy (alpha) names for migration
+    legacy_win = "eF Drift Car Scrutineer Alpha"
+    legacy_unix = "ef-drift-scrutineer-alpha"
 
     if os.name == "nt":
         base = os.getenv("LOCALAPPDATA") or os.getenv("APPDATA") or str(Path.home() / "AppData" / "Local")
-        return Path(base) / app_dir_name_win
+        newp = Path(base) / app_dir_name_win
+        # If migrating, prefer existing legacy path to avoid losing cache/state
+        legp = Path(base) / legacy_win
+        return legp if legp.exists() and not newp.exists() else newp
     if sys.platform == "darwin":
-        return Path.home() / "Library" / "Caches" / app_dir_name_win
+        newp = Path.home() / "Library" / "Caches" / app_dir_name_win
+        legp = Path.home() / "Library" / "Caches" / legacy_win
+        return legp if legp.exists() and not newp.exists() else newp
     # Linux/Unix
     xdg = os.getenv("XDG_CACHE_HOME")
     if xdg:
-        return Path(xdg) / app_dir_name_unix
-    return Path.home() / ".cache" / app_dir_name_unix
+        newp = Path(xdg) / app_dir_name_unix
+        legp = Path(xdg) / legacy_unix
+        return legp if legp.exists() and not newp.exists() else newp
+    newp = Path.home() / ".cache" / app_dir_name_unix
+    legp = Path.home() / ".cache" / legacy_unix
+    return legp if legp.exists() and not newp.exists() else newp
 
 
 # Base cache directory (override with APP_CACHE_DIR if set)
