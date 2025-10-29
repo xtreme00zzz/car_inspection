@@ -203,6 +203,11 @@ class InspectorUI(tk.Tk):
         self._login_prompt_window: tk.Toplevel | None = None
         self.auth: AuthManager | None = None
         self.state = AppState()
+        # Updater channel (persisted), default from app_version
+        try:
+            self.update_channel_var = tk.StringVar(value=str(UPDATE_CHANNEL))
+        except Exception:
+            self.update_channel_var = tk.StringVar(value='stable')
         self.report_raw_text = ''  # cached report text for filtering/search
         self._temp_car_extract: Path | None = None
         # Fonts
@@ -1100,7 +1105,12 @@ class InspectorUI(tk.Tk):
 
     def menu_check_updates(self):
         try:
-            updater.check_for_update_synchronously(self, manual=True)
+            ch = None
+            try:
+                ch = self.update_channel_var.get()
+            except Exception:
+                ch = None
+            updater.check_for_update_synchronously(self, manual=True, channel=ch)
         except Exception:
             try:
                 messagebox.showinfo('Update', 'Update check failed.')
@@ -1129,6 +1139,8 @@ class InspectorUI(tk.Tk):
             setb(self.enf_assets_var, 'enf_assets'); sets(self.max_kn5_mb_var, 'max_kn5'); sets(self.max_skin_mb_var, 'max_skin')
             setb(self.enf_model_var, 'enf_model'); sets(self.max_tris_var, 'max_tris'); sets(self.max_objs_var, 'max_objs'); setb(self.require_ks_var, 'require_ks')
             setb(self.enf_rwd_var, 'enf_rwd'); setb(self.enf_year_var, 'enf_year'); sets(self.min_year_var, 'min_year'); setb(self.e92_fallback_var, 'e92')
+            # Updater
+            sets(self.update_channel_var, 'update_channel')
         except Exception:
             pass
 
@@ -1144,6 +1156,7 @@ class InspectorUI(tk.Tk):
                 'enf_assets': self.enf_assets_var.get(), 'max_kn5': self.max_kn5_mb_var.get(), 'max_skin': self.max_skin_mb_var.get(),
                 'enf_model': self.enf_model_var.get(), 'max_tris': self.max_tris_var.get(), 'max_objs': self.max_objs_var.get(), 'require_ks': self.require_ks_var.get(),
                 'enf_rwd': self.enf_rwd_var.get(), 'enf_year': self.enf_year_var.get(), 'min_year': self.min_year_var.get(), 'e92': self.e92_fallback_var.get(),
+                'update_channel': getattr(self, 'update_channel_var', None).get() if hasattr(self, 'update_channel_var') else 'stable',
             }
             self.state.settings_path.parent.mkdir(parents=True, exist_ok=True)
             self.state.settings_path.write_text(json.dumps(data, indent=2), encoding='utf-8')
@@ -1179,6 +1192,14 @@ class InspectorUI(tk.Tk):
             add_bool('Enforce model caps', self.enf_model_var); add_num('Max triangles', self.max_tris_var); add_num('Max objects', self.max_objs_var); add_bool('Require KN5 stats JSON', self.require_ks_var)
             # Misc
             add_bool('Enforce RWD', self.enf_rwd_var); add_bool('Enforce Year >=', self.enf_year_var); add_num('Min year', self.min_year_var); add_bool('Allow E92 fallback', self.e92_fallback_var)
+            # Updates
+            try:
+                tk.Label(frm, text='Update channel', bg=self.BRAND_LIGHT, fg=self.BRAND_BLACK).grid(row=row, column=0, sticky='w')
+                from tkinter import ttk as _ttk
+                _ttk.Combobox(frm, values=['stable','beta'], textvariable=self.update_channel_var, state='readonly', width=12).grid(row=row, column=1, sticky='w')
+                row += 1
+            except Exception:
+                pass
             # Buttons
             bar = tk.Frame(tl, bg=self.BRAND_LIGHT); bar.pack(fill='x', padx=10, pady=(0,10))
             ttk.Button(bar, text='Save', command=lambda: (self.save_settings(), tl.destroy()), style='Success.TButton').pack(side='right')
@@ -5224,8 +5245,13 @@ if __name__ == '__main__':
     app = InspectorUI()
     app.geometry('900x700')
     try:
-        # Always check based on configured update channel
-        updater.maybe_check_for_updates_in_background(app)
+        # Always check based on configured update channel from Settings
+        ch = None
+        try:
+            ch = app.update_channel_var.get()
+        except Exception:
+            ch = None
+        updater.maybe_check_for_updates_in_background(app, channel=ch)
     except Exception:
         pass
     app.mainloop()
