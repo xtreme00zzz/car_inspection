@@ -5,6 +5,8 @@ REM Windows release build script (one-dir, one-file, payload, updater)
 REM Derives repo root from this script's location
 set "REPO=%~dp0.."
 set "APP_NAME=eF Drift Car Scrutineer"
+set "PY=%REPO%\.venv-alpha-win\Scripts\python.exe"
+if not exist "%PY%" set "PY=python"
 pushd "%REPO%"
 
 echo [1/6] Cleaning previous release build artifacts...
@@ -20,7 +22,7 @@ echo [2/6] Building release onedir distribution...
 set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
 set "OD3=--add-data" & set "OD4=%REPO%\icon.ico;."
 set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
-call "%REPO%\.venv-alpha-win\Scripts\python.exe" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
   --icon "%REPO%\icon.ico" --name "%APP_NAME%" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ^
   %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" ^
@@ -31,7 +33,7 @@ echo [3/6] Building release onefile executable...
 set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
 set "AA3=--add-data" & set "AA4=%REPO%\icon.ico;."
 set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
-call "%REPO%\.venv-alpha-win\Scripts\python.exe" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
   --icon "%REPO%\icon.ico" --name "%APP_NAME%" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ^
   %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" ^
@@ -56,14 +58,14 @@ copy /Y "%REPO%\README.md" "%REPO%\dist\release_payload\docs\README.md" >nul
 
 rem Resolve app version from app_version.py
 set "APPVER="
-for /f "usebackq delims=" %%v in (`"%REPO%\.venv-alpha-win\Scripts\python.exe" -c "import app_version; print(app_version.APP_VERSION)"`) do set "APPVER=%%v"
+for /f "usebackq delims=" %%v in (`"%PY%" -c "import app_version; print(app_version.APP_VERSION)"`) do set "APPVER=%%v"
 if not defined APPVER (
   set "APPVER=0.1.0"
 )
 echo eF Drift Car Scrutineer %APPVER%>"%REPO%\dist\release_payload\VERSION.txt"
 
 echo [5/6] Building updater stub...
-call "%REPO%\.venv-alpha-win\Scripts\python.exe" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console ^
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console ^
   --name "eF Drift Car Scrutineer Updater" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-updater" --specpath "%REPO%\build" ^
   "%REPO%\tools\windows_updater_stub.py"
