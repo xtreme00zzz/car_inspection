@@ -78,15 +78,11 @@ echo   Onedir dist : dist\%APP_NAME%
 echo   Onefile exe : dist\%APP_NAME%.exe
 echo   Payload root: dist\release_payload
 echo.
-REM Optional: Compile installer if ISCC.exe is available
-for %%X in (iscc.exe ISCC.exe) do (
-  where %%X >nul 2>nul && (
-    echo [Extra] Compiling installer with Inno Setup...
-    call build\run_iscc.bat
-    goto :done_iscc
-  )
+REM Optional: Compile installer (handled by helper script; it detects ISCC)
+if exist "build\run_iscc.bat" (
+  echo [Extra] Attempting to compile installer with Inno Setup...
+  call build\run_iscc.bat
 )
-:done_iscc
 popd
 exit /b 0
 
