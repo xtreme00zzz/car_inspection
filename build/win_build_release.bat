@@ -19,7 +19,13 @@ if exist "dist\release_payload" rmdir /s /q "dist\release_payload"
 if not exist "dist" mkdir "dist"
 
 echo [2/6] Building release onedir distribution...
-set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
+set "OD1=" & set "OD2="
+if exist "%REPO%\reference_cars" (
+set "OD1=" & set "OD2="
+if exist "%REPO%\reference_cars" (
+  set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
+)
+)
 set "OD3=--add-data" & set "OD4=%REPO%\icon.ico;."
 set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
@@ -30,7 +36,13 @@ call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windo
 if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
-set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
+set "AA1=" & set "AA2="
+if exist "%REPO%\reference_cars" (
+set "AA1=" & set "AA2="
+if exist "%REPO%\reference_cars" (
+  set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
+)
+)
 set "AA3=--add-data" & set "AA4=%REPO%\icon.ico;."
 set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
