@@ -1,34 +1,41 @@
 @echo off
-setlocal enabledelayedexpansion
-set "REPO=%~dp0.."
-pushd "%REPO%"
+setlocal enableextensions
 
-REM Resolve version from app_version.py
-set "APPVER=0.1.0"
-for /f "usebackq tokens=2 delims== " %%v in (`findstr /B /C:"APP_VERSION" app_version.py`) do set "APPVER=%%v"
-set "APPVER=!APPVER:\"=!"
-set "APPVER=!APPVER: =!"
+REM Derive repo root from this script location (works even if double-clicked)
+set "SCRIPT_DIR=%~dp0"
+set "REPO=%SCRIPT_DIR%.."
 
-REM Locate ISCC.exe (try PATH, then common install locations)
-set "ISCCEXE="
-for /f "delims=" %%X in ('where iscc.exe 2^>nul') do if not defined ISCCEXE set "ISCCEXE=%%~X"
-if not defined ISCCEXE if exist "C:\Program Files\Inno Setup 6\ISCC.exe" set "ISCCEXE=C:\Program Files\Inno Setup 6\ISCC.exe"
-if not defined ISCCEXE if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" set "ISCCEXE=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+REM Normalize directories we pass to ISCC
+set "DIST=%REPO%\dist"
+set "PAYLOAD=%REPO%\dist\release_payload"
+set "OUT=%REPO%\dist"
 
-if not defined ISCCEXE (
-  echo INFO: Inno Setup (ISCC.exe) not found. Skipping installer build.
-  popd
-  exit /b 0
-)
+REM Detect ISCC.exe in common install locations
+set "ISCC_PATH="
+if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" set "ISCC_PATH=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+if not defined ISCC_PATH if exist "C:\Program Files\Inno Setup 6\ISCC.exe" set "ISCC_PATH=C:\Program Files\Inno Setup 6\ISCC.exe"
+if not defined ISCC_PATH if exist "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" set "ISCC_PATH=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
 
-echo Building installer with Inno Setup...
-"%ISCCEXE%" "build\installer.iss" /DAppVersion=!APPVER! /DDistRoot="%REPO%\dist" /DPayloadRoot="%REPO%\dist\release_payload" /DOutputDir="%REPO%\dist"
-if errorlevel 1 (
-  echo Inno Setup build failed.
-  popd
+if not defined ISCC_PATH (
+  echo ISCC.exe not found. Please install Inno Setup 6 or adjust this script.
   exit /b 1
 )
 
-echo Installer created in dist\
-popd
-exit /b 0
+echo Using ISCC at: "%ISCC_PATH%"
+REM If a preferred installer icon exists on this machine, pass it to the compiler
+set "INSTALLER_ICON=C:\Users\alexa\Videos\Stream Assets\next participants\icon.ico"
+set ICON_DEFINE=
+if exist "%INSTALLER_ICON%" (
+  echo Using installer icon: "%INSTALLER_ICON%"
+  set ICON_DEFINE=/DInstallerIcon="%INSTALLER_ICON%"
+)
+pushd "%REPO%" >nul
+"%ISCC_PATH%" build\installer.iss ^
+  /DAppVersion=0.1.0 ^
+  /DDistRoot="%DIST%" ^
+  /DPayloadRoot="%PAYLOAD%" ^
+  /DOutputDir="%OUT%" %ICON_DEFINE%
+set "ERR=%ERRORLEVEL%"
+popd >nul
+
+exit /b %ERR%

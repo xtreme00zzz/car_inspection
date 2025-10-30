@@ -33,7 +33,17 @@ DefaultGroupName={#AppName}
 DisableDirPage=no
 DisableProgramGroupPage=yes
 OutputDir={#OutputDir}
-OutputBaseFilename=efdrift-scrutineer-setup-{#AppVersion}
+OutputBaseFilename=efdrift-scrutineer-setup
+; Allow overriding installer icon from command line via /DInstallerIcon="path\icon.ico"
+#ifndef InstallerIcon
+#define InstallerIcon "..\\icon.ico"
+#endif
+; Use the provided application icon for the installer EXE
+SetupIconFile={#InstallerIcon}
+; Show the installed app's icon in Apps & Features for uninstall
+UninstallDisplayIcon={app}\{#AppExeName}
+; Enable disk spanning to support installers >4.2 GB
+DiskSpanning=yes
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
@@ -63,4 +73,3 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: deskto
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
-

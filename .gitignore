@@ -13,6 +13,9 @@ dist/
 reference_cars/
 reports/
 
+# Generated reference payloads (not tracked)
+build/reference_cars_*/
+
 *.log
 
 # Ignore platform-specific files
