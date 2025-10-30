@@ -9,6 +9,10 @@ set "PY=%REPO%\.venv-alpha-win\Scripts\python.exe"
 if not exist "%PY%" set "PY=python"
 pushd "%REPO%"
 
+rem Prefer a custom icon if present; fallback to repo icon.ico
+set "ICON_PATH=C:\Users\alexa\Videos\Stream Assets\next participants\icon.ico"
+if not exist "%ICON_PATH%" set "ICON_PATH=%REPO%\icon.ico"
+
 echo [1/6] Cleaning previous release build artifacts...
 if exist "build\pyinstaller-build-release" rmdir /s /q "build\pyinstaller-build-release"
 if exist "build\pyinstaller-build-release-onefile" rmdir /s /q "build\pyinstaller-build-release-onefile"
@@ -26,10 +30,10 @@ if exist "%REPO%\reference_cars" (
   set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
 )
 )
-set "OD3=--add-data" & set "OD4=%REPO%\icon.ico;."
+set "OD3=--add-data" & set "OD4=%ICON_PATH%;."
 set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
-  --icon "%REPO%\icon.ico" --name "%APP_NAME%" ^
+  --icon "%ICON_PATH%" --name "%APP_NAME%" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ^
   %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" ^
   "%REPO%\ui_app.py"
@@ -43,10 +47,10 @@ if exist "%REPO%\reference_cars" (
   set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
 )
 )
-set "AA3=--add-data" & set "AA4=%REPO%\icon.ico;."
+set "AA3=--add-data" & set "AA4=%ICON_PATH%;."
 set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
-  --icon "%REPO%\icon.ico" --name "%APP_NAME%" ^
+  --icon "%ICON_PATH%" --name "%APP_NAME%" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ^
   %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" ^
   "%REPO%\ui_app.py"
@@ -78,6 +82,7 @@ echo eF Drift Car Scrutineer %APPVER%>"%REPO%\dist\release_payload\VERSION.txt"
 
 echo [5/6] Building updater stub...
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console ^
+  --icon "%ICON_PATH%" ^
   --name "eF Drift Car Scrutineer Updater" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-updater" --specpath "%REPO%\build" ^
   "%REPO%\tools\windows_updater_stub.py"
