@@ -42,8 +42,8 @@ OutputBaseFilename=efdrift-scrutineer-setup
 SetupIconFile={#InstallerIcon}
 ; Show the installed app's icon in Apps & Features for uninstall
 UninstallDisplayIcon={app}\{#AppExeName}
-; Enable disk spanning to support installers >4.2 GB
-DiskSpanning=yes
+; Disable disk spanning to produce a single EXE
+DiskSpanning=no
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
@@ -59,8 +59,6 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 [Files]
 ; Onedir app folder
 Source: "{#DistRoot}\{#AppFolderName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Onefile bootstrap exe
-Source: "{#DistRoot}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; Updater stub (if present)
 Source: "{#DistRoot}\{#AppFolderName}\eF Drift Car Scrutineer Updater.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 ; Docs and version

@@ -9,6 +9,8 @@ REM Normalize directories we pass to ISCC
 set "DIST=%REPO%\dist"
 set "PAYLOAD=%REPO%\dist\release_payload"
 set "OUT=%REPO%\dist"
+REM To avoid collisions with a locked installer in dist, write to a subfolder
+set "OUT_ACTUAL=%OUT%\_installer"
 
 REM Detect ISCC.exe in common install locations
 set "ISCC_PATH="
@@ -34,7 +36,7 @@ pushd "%REPO%" >nul
   /DAppVersion=0.1.0 ^
   /DDistRoot="%DIST%" ^
   /DPayloadRoot="%PAYLOAD%" ^
-  /DOutputDir="%OUT%" %ICON_DEFINE%
+  /DOutputDir="%OUT_ACTUAL%" %ICON_DEFINE%
 set "ERR=%ERRORLEVEL%"
 popd >nul
 
