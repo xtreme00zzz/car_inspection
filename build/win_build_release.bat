@@ -13,6 +13,9 @@ rem Prefer a custom icon if present; fallback to repo icon.ico
 set "ICON_PATH=C:\Users\alexa\Videos\Stream Assets\next participants\icon.ico"
 if not exist "%ICON_PATH%" set "ICON_PATH=%REPO%\icon.ico"
 
+rem Allow optional exclusion of heavy reference data for smaller onefile build
+set "NO_REF_DATA=%NO_REF_DATA%"
+
 echo [1/6] Cleaning previous release build artifacts...
 if exist "build\pyinstaller-build-release" rmdir /s /q "build\pyinstaller-build-release"
 if exist "build\pyinstaller-build-release-onefile" rmdir /s /q "build\pyinstaller-build-release-onefile"
@@ -24,11 +27,10 @@ if not exist "dist" mkdir "dist"
 
 echo [2/6] Building release onedir distribution...
 set "OD1=" & set "OD2="
-if exist "%REPO%\reference_cars" (
-set "OD1=" & set "OD2="
-if exist "%REPO%\reference_cars" (
-  set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
-)
+if not "%NO_REF_DATA%"=="1" (
+  if exist "%REPO%\reference_cars" (
+    set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
+  )
 )
 set "OD3=--add-data" & set "OD4=%ICON_PATH%;."
 set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
@@ -41,11 +43,10 @@ if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
 set "AA1=" & set "AA2="
-if exist "%REPO%\reference_cars" (
-set "AA1=" & set "AA2="
-if exist "%REPO%\reference_cars" (
-  set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
-)
+if not "%NO_REF_DATA%"=="1" (
+  if exist "%REPO%\reference_cars" (
+    set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
+  )
 )
 set "AA3=--add-data" & set "AA4=%ICON_PATH%;."
 set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
