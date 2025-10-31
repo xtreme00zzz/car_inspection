@@ -11,7 +11,7 @@ import urllib.parse
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 try:
     from tkinter import messagebox
@@ -75,6 +75,18 @@ def _http_get_json(url: str) -> Optional[object]:
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = resp.read()
             return json.loads(data.decode('utf-8', errors='replace'))
+    except Exception:
+        return None
+
+
+def _http_get_bytes(url: str) -> Optional[bytes]:
+    headers = _github_headers()
+    # Request raw content for release assets
+    headers['Accept'] = 'application/octet-stream'
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.read()
     except Exception:
         return None
 
@@ -173,6 +185,39 @@ def _pick_asset_for_channel(assets: List[ReleaseAsset], channel: str) -> Optiona
         if a.name.lower().endswith('.exe'):
             return a
     return None
+
+
+def _try_manifest_from_assets(assets: List[ReleaseAsset]) -> Optional[ReleaseAsset]:
+    """If the release includes a small JSON manifest asset, use it to resolve
+    the actual download URL (e.g., Cloudflare R2 URL). Expected JSON shape:
+    {"name": "efdrift-scrutineer-setup.exe", "url": "https://.../setup.exe", "size": 0, "sha256": "..."}
+    """
+    manifest_names = {
+        'update.json', 'latest.json', 'manifest.json',
+        'efdrift-scrutineer-update.json', 'efdrift-update.json',
+    }
+    manifest_asset: Optional[ReleaseAsset] = None
+    for a in assets:
+        if a.name.lower() in manifest_names:
+            manifest_asset = a
+            break
+    if not manifest_asset:
+        return None
+    data = _http_get_bytes(manifest_asset.url)
+    if not data:
+        return None
+    try:
+        payload = json.loads(data.decode('utf-8', errors='replace'))
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    url = str(payload.get('url') or '')
+    if not url:
+        return None
+    name = str(payload.get('name') or Path(urllib.parse.urlparse(url).path).name or 'efdrift-scrutineer-setup.exe')
+    size = int(payload.get('size') or 0)
+    return ReleaseAsset(name=name, url=url, size=size)
 
 
 def _env_override_asset(channel: str) -> Optional[ReleaseAsset]:
@@ -293,7 +338,11 @@ def check_for_update_synchronously(parent=None, manual: bool = False, channel: O
             return
         if not messagebox.askyesno('Update Available', f'New {ch} version available (tag {latest.tag}).\n\nCurrent: {APP_VERSION}\nDownload and install now?'):
             return
-        asset = _pick_asset_for_channel(latest.assets, ch)
+        # Prefer manifest asset that points to external hosting (e.g., Cloudflare R2),
+        # then fallback to a direct .exe asset.
+        asset = _try_manifest_from_assets(latest.assets)
+        if not asset:
+            asset = _pick_asset_for_channel(latest.assets, ch)
         if not asset:
             messagebox.showinfo('Update', 'No suitable installer found in the latest release.')
             return
