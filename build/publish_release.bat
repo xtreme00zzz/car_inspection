@@ -27,7 +27,19 @@ REM Verify R2 variables
 set "PUBLIC_URL="
 set "MANIFEST_NAME="
 
-if defined GDRIVE_FILE_ID (
+if defined GDRIVE_UPLOAD (
+  if not defined GDRIVE_CLIENT_ID echo GDRIVE_CLIENT_ID not set & exit /b 2
+  if not defined GDRIVE_CLIENT_SECRET echo GDRIVE_CLIENT_SECRET not set & exit /b 2
+  if not defined GDRIVE_REFRESH_TOKEN echo GDRIVE_REFRESH_TOKEN not set & exit /b 2
+  set "GD_ARGS=--file \"%FILE%\" --client-id \"%GDRIVE_CLIENT_ID%\" --client-secret \"%GDRIVE_CLIENT_SECRET%\" --refresh-token \"%GDRIVE_REFRESH_TOKEN%\""
+  if defined GDRIVE_FILE_NAME set "GD_ARGS=%GD_ARGS% --name \"%GDRIVE_FILE_NAME%\""
+  if defined GDRIVE_FOLDER_ID set "GD_ARGS=%GD_ARGS% --folder \"%GDRIVE_FOLDER_ID%\""
+  echo Uploading to Google Drive...
+  for /f "usebackq tokens=1,* delims==" %%A in (`"%PY%" "%REPO%\build\gdrive_upload.py" %GD_ARGS% ^| findstr /R /C:"^[A-Z_][A-Z_]*="`) do set "%%A=%%B"
+  if not defined FILE_ID echo Google Drive upload failed & exit /b 3
+  set "PUBLIC_URL=https://drive.google.com/uc?export=download&id=%FILE_ID%"
+  if defined NAME set "MANIFEST_NAME=%NAME%"
+) else if defined GDRIVE_FILE_ID (
   set "PUBLIC_URL=https://drive.google.com/uc?export=download&id=%GDRIVE_FILE_ID%"
   if defined GDRIVE_FILE_NAME set "MANIFEST_NAME=%GDRIVE_FILE_NAME%"
 ) else (
