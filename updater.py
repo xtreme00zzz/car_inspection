@@ -10,6 +10,8 @@ import urllib.request
 import urllib.parse
 import subprocess
 from dataclasses import dataclass
+import re
+import zipfile
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
@@ -259,6 +261,89 @@ def _download(url: str, dest: Path) -> bool:
         return False
 
 
+def _gdrive_file_id_from_url(url: str) -> Optional[str]:
+    try:
+        # Match /file/d/<id>/ or id=<id>
+        m = re.search(r"/file/d/([A-Za-z0-9_-]+)", url)
+        if m:
+            return m.group(1)
+        m = re.search(r"[?&]id=([A-Za-z0-9_-]+)", url)
+        if m:
+            return m.group(1)
+        return None
+    except Exception:
+        return None
+
+
+def _download_gdrive(file_id: str, dest: Path) -> bool:
+    # Public link flow using confirm token
+    base = "https://drive.google.com/uc?export=download"
+    params = f"id={file_id}"
+    url1 = f"{base}&{params}"
+    headers = {'User-Agent': 'ef-scrutineer-updater'}
+    tmp = dest.with_suffix('.part')
+    try:
+        req1 = urllib.request.Request(url1, headers=headers)
+        with urllib.request.urlopen(req1, timeout=30) as resp1:
+            data = resp1.read().decode('utf-8', errors='replace')
+            cookie = resp1.headers.get('Set-Cookie', '')
+        m = re.search(r"confirm=([0-9A-Za-z_]+)", data)
+        confirm = m.group(1) if m else None
+        url2 = url1
+        if confirm:
+            url2 = f"{base}&confirm={confirm}&{params}"
+        headers2 = {'User-Agent': 'ef-scrutineer-updater'}
+        if cookie:
+            headers2['Cookie'] = cookie
+        req2 = urllib.request.Request(url2, headers=headers2)
+        with urllib.request.urlopen(req2, timeout=300) as resp2, open(tmp, 'wb') as f:
+            while True:
+                chunk = resp2.read(65536)
+                if not chunk:
+                    break
+                f.write(chunk)
+        tmp.replace(dest)
+        return True
+    except Exception:
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+        return False
+
+
+def _handle_zip_and_launch(zip_path: Path) -> bool:
+    try:
+        extract_dir = zip_path.parent / f"extracted_{int(time.time())}"
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            zf.extractall(extract_dir)
+        # Prefer setup/installer exe
+        candidates = []
+        for p in extract_dir.rglob('*.exe'):
+            candidates.append(p)
+        if not candidates:
+            return False
+        # Pick installer-like exe if present
+        exe = None
+        for p in candidates:
+            n = p.name.lower()
+            if 'setup' in n or 'installer' in n:
+                exe = p; break
+        if exe is None:
+            # Fallback to app exe
+            for p in candidates:
+                if p.name.lower().endswith('.exe'):
+                    exe = p; break
+        if exe is None:
+            return False
+        _install_downloaded(exe)
+        return True
+    except Exception:
+        return False
+
+
 def _find_updater_stub() -> Optional[Path]:
     exe_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else APP_BASE_DIR
     candidates = [
@@ -350,11 +435,21 @@ def check_for_update_synchronously(parent=None, manual: bool = False, channel: O
     updates_dir = _data_root() / 'updates'
     updates_dir.mkdir(parents=True, exist_ok=True)
     dest = updates_dir / asset.name
-    ok = _download(asset.url, dest)
+    # Support Google Drive public link via uc?export=download&id= or /file/d/<id>/...
+    ok = False
+    file_id = _gdrive_file_id_from_url(asset.url) if ('drive.google.com' in asset.url) else None
+    if file_id:
+        ok = _download_gdrive(file_id, dest)
+    else:
+        ok = _download(asset.url, dest)
     if not ok:
         messagebox.showerror('Update', 'Failed to download update. Please try again later.')
         return
 
+    # If the asset is a zip, extract and launch contained installer/app
+    if dest.suffix.lower() == '.zip':
+        if _handle_zip_and_launch(dest):
+            return
     # If the asset looks like an installer, launch it instead of in-place replace
     if asset.name.lower().find('setup') >= 0 or asset.name.lower().find('installer') >= 0:
         _install_downloaded(dest)
