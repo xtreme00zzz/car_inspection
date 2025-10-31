@@ -29,5 +29,21 @@ Updates and Releases
 --------------------
 
 - Create a GitHub Release tagged with the version (e.g., `v1.0.0` or `1.0.0`).
-- Upload the one‑file EXE named `eF Drift Car Scrutineer.exe` to the release.
+- Upload a suitable asset for the chosen channel:
+  - Stable: prefer the one‑file EXE named `eF Drift Car Scrutineer.exe`. To reduce size for GitHub limits, you can set `NO_REF_DATA=1` when building.
+  - Alternatively, upload the installer `efdrift-scrutineer-setup.exe` and the app will launch it directly.
 - On startup, the app checks for updates based on `UPDATE_CHANNEL` and prompts to install newer versions.
+
+Private repos and tokens
+------------------------
+
+- For private repos, set an environment variable with a GitHub token on the client machine so the updater can read releases:
+  - `EF_SCRUTINEER_GITHUB_TOKEN` (preferred) or `GITHUB_TOKEN`
+  - Token needs at least `repo` read access.
+
+Direct URL override (advanced)
+------------------------------
+
+- You can bypass GitHub Releases for updates by setting an environment variable to a direct download URL:
+  - `EF_SCRUTINEER_UPDATE_URL` or channel‑specific `EF_SCRUTINEER_UPDATE_URL_STABLE` / `_BETA` / `_ALPHA`
+- The updater will download that URL and, if the file name contains `setup` or `installer`, it will launch it; otherwise it will attempt in‑place replacement.

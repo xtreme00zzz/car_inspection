@@ -7,6 +7,7 @@ import time
 import threading
 import urllib.error
 import urllib.request
+import urllib.parse
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,11 +57,20 @@ def _data_root() -> Path:
     return Path.home() / '.ef_drift_scrutineer'
 
 
-def _http_get_json(url: str) -> Optional[object]:
-    req = urllib.request.Request(url, headers={
+def _github_headers() -> dict:
+    headers = {
         'Accept': 'application/vnd.github+json',
-        'User-Agent': 'ef-scrutineer-updater'
-    })
+        'User-Agent': 'ef-scrutineer-updater',
+    }
+    token = os.getenv('EF_SCRUTINEER_GITHUB_TOKEN') or os.getenv('GITHUB_TOKEN')
+    if token:
+        # Support PAT or GH app tokens
+        headers['Authorization'] = f'Bearer {token}'
+    return headers
+
+
+def _http_get_json(url: str) -> Optional[object]:
+    req = urllib.request.Request(url, headers=_github_headers())
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = resp.read()
@@ -153,6 +163,7 @@ def _pick_asset_for_channel(assets: List[ReleaseAsset], channel: str) -> Optiona
         names.extend([
             'eF Drift Car Scrutineer.exe',
             'ef-drift-scrutineer.exe',
+            'efdrift-scrutineer-setup.exe',
         ])
     for n in names:
         for a in assets:
@@ -162,6 +173,24 @@ def _pick_asset_for_channel(assets: List[ReleaseAsset], channel: str) -> Optiona
         if a.name.lower().endswith('.exe'):
             return a
     return None
+
+
+def _env_override_asset(channel: str) -> Optional[ReleaseAsset]:
+    """Allow overriding update asset via environment variable.
+
+    EF_SCRUTINEER_UPDATE_URL or EF_SCRUTINEER_UPDATE_URL_<CHANNEL>
+    (e.g., EF_SCRUTINEER_UPDATE_URL_STABLE) can point to a direct .exe URL.
+    """
+    url = os.getenv('EF_SCRUTINEER_UPDATE_URL')
+    if not url:
+        url = os.getenv(f'EF_SCRUTINEER_UPDATE_URL_{(channel or "stable").upper()}')
+    if not url:
+        return None
+    try:
+        name = Path(urllib.parse.urlparse(url).path).name or 'efdrift-scrutineer-setup.exe'
+    except Exception:
+        name = 'efdrift-scrutineer-setup.exe'
+    return ReleaseAsset(name=name, url=url, size=0)
 
 
 def _download(url: str, dest: Path) -> bool:
@@ -240,32 +269,34 @@ def check_for_update_synchronously(parent=None, manual: bool = False, channel: O
             messagebox.showinfo('Update', 'Updates are not configured for this build.')
         return
 
-    releases = _list_releases(GITHUB_OWNER, GITHUB_REPO)
-    if not releases:
-        if manual and messagebox:
-            messagebox.showinfo('Update', 'No releases found or network unavailable.')
-        return
-    latest = _select_release_for_channel(releases, ch)
-    if not latest:
-        if manual and messagebox:
-            messagebox.showinfo('Update', f'No {ch} release found.')
-        return
-
-    latest_ver_text = latest.tag
-    if not _is_newer(latest_ver_text, APP_VERSION):
-        if manual and messagebox:
-            messagebox.showinfo('Update', f'You are up to date. Version {APP_VERSION}.')
-        return
-
-    if messagebox is None:
-        return
-    if not messagebox.askyesno('Update Available', f'New {ch} version available (tag {latest.tag}).\n\nCurrent: {APP_VERSION}\nDownload and install now?'):
-        return
-
-    asset = _pick_asset_for_channel(latest.assets, ch)
-    if not asset:
-        messagebox.showinfo('Update', 'No suitable installer found in the latest release.')
-        return
+    # Allow environment override for the asset URL; if not set, use GitHub Releases
+    asset = _env_override_asset(ch)
+    latest = None
+    latest_ver_text = ''
+    if asset is None:
+        releases = _list_releases(GITHUB_OWNER, GITHUB_REPO)
+        if not releases:
+            if manual and messagebox:
+                messagebox.showinfo('Update', 'No releases found or network unavailable.')
+            return
+        latest = _select_release_for_channel(releases, ch)
+        if not latest:
+            if manual and messagebox:
+                messagebox.showinfo('Update', f'No {ch} release found.')
+            return
+        latest_ver_text = latest.tag
+        if not _is_newer(latest_ver_text, APP_VERSION):
+            if manual and messagebox:
+                messagebox.showinfo('Update', f'You are up to date. Version {APP_VERSION}.')
+            return
+        if messagebox is None:
+            return
+        if not messagebox.askyesno('Update Available', f'New {ch} version available (tag {latest.tag}).\n\nCurrent: {APP_VERSION}\nDownload and install now?'):
+            return
+        asset = _pick_asset_for_channel(latest.assets, ch)
+        if not asset:
+            messagebox.showinfo('Update', 'No suitable installer found in the latest release.')
+            return
 
     updates_dir = _data_root() / 'updates'
     updates_dir.mkdir(parents=True, exist_ok=True)
@@ -273,6 +304,11 @@ def check_for_update_synchronously(parent=None, manual: bool = False, channel: O
     ok = _download(asset.url, dest)
     if not ok:
         messagebox.showerror('Update', 'Failed to download update. Please try again later.')
+        return
+
+    # If the asset looks like an installer, launch it instead of in-place replace
+    if asset.name.lower().find('setup') >= 0 or asset.name.lower().find('installer') >= 0:
+        _install_downloaded(dest)
         return
 
     # If running a frozen executable, try to use the updater stub for in-place replace
