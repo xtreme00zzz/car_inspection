@@ -3357,6 +3357,8 @@ class InspectorUI(tk.Tk):
                 'Root Folder Differences:',
                 'Suspicious Root Entries:',
                 'Anti-Cheat:',
+                'UI Summary:',
+                'Vehicle Specs:',
             )
             for label in section_labels:
                 start = '1.0'
@@ -3640,6 +3642,7 @@ class InspectorUI(tk.Tk):
                 'Suspicious Root Entries:',
                 'Anti-Cheat:',
                 'UI Summary:',
+                'Vehicle Specs:',
             ):
                 s = s.replace(label, f'<span style="color:{self.BRAND_NAVY}; font-weight:bold;">{label}</span>')
             s = s.replace('Overall Status: PASS', '<span style="color:#188038; font-weight:bold;">Overall Status: PASS</span>')
