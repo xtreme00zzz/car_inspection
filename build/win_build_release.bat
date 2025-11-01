@@ -7,7 +7,6 @@ set "REPO=%~dp0.."
 set "APP_NAME=eF Drift Car Scrutineer"
 set "APP_NAME_FILE=efdrift-scrutineer"
 set "PY=%REPO%\.venv-alpha-win\Scripts\python.exe"
-if not exist "%PY%" set "PY=python"
 pushd "%REPO%"
 
 rem Prefer a custom icon if present; fallback to repo icon.ico
@@ -28,11 +27,19 @@ if exist "dist\release_payload" rmdir /s /q "dist\release_payload"
 if not exist "dist" mkdir "dist"
 
 echo [2/6] Building release onedir distribution...
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" -- ui_app.py
+if exist "%PY%" (
+  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ui_app.py
+  ) else (
+  call pyinstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ui_app.py
+)
 if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" -- ui_app.py
+if exist "%PY%" (
+  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ui_app.py
+) else (
+  call pyinstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ui_app.py
+)
 if errorlevel 1 goto :error
 
 rem Rename artifacts to friendly display names with spaces
@@ -70,11 +77,19 @@ if not defined APPVER (
 echo eF Drift Car Scrutineer %APPVER%>"%REPO%\dist\release_payload\VERSION.txt"
 
 echo [5/6] Building updater stub...
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console ^
+if exist "%PY%" (
+  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --console ^
   --icon "%ICON_PATH%" ^
   --name "eF Drift Car Scrutineer Updater" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-updater" --specpath "%REPO%\build" ^
   "%REPO%\tools\windows_updater_stub.py"
+) else (
+  call pyinstaller --noconfirm --clean --log-level=WARN --onefile --console ^
+  --icon "%ICON_PATH%" ^
+  --name "eF Drift Car Scrutineer Updater" ^
+  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-updater" --specpath "%REPO%\build" ^
+  "%REPO%\tools\windows_updater_stub.py"
+)
 if errorlevel 1 goto :error
 copy /Y "%REPO%\dist\eF Drift Car Scrutineer Updater.exe" "%REPO%\dist\%APP_NAME%\eF Drift Car Scrutineer Updater.exe" >nul
 copy /Y "%REPO%\dist\eF Drift Car Scrutineer Updater.exe" "%REPO%\dist\release_payload\eF Drift Car Scrutineer Updater.exe" >nul
