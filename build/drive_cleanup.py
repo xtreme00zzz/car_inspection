@@ -9,6 +9,7 @@ from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from google.auth import exceptions as gauth_exceptions
 
 
 def _service_from_sa_b64(sa_b64: str):
@@ -32,15 +33,19 @@ def _service_from_oauth_env():
     rtok = os.getenv('GDRIVE_REFRESH_TOKEN')
     if not (cid and csec and rtok):
         return None
+    # Do not request scopes explicitly; reuse scopes bound to the refresh token.
     creds = Credentials(
         token=None,
         refresh_token=rtok,
         token_uri='https://oauth2.googleapis.com/token',
         client_id=cid,
         client_secret=csec,
-        scopes=['https://www.googleapis.com/auth/drive']
     )
-    creds.refresh(Request())
+    try:
+        creds.refresh(Request())
+    except gauth_exceptions.RefreshError:
+        # Invalid scope or revoked token; skip OAuth path.
+        return None
     return build('drive', 'v3', credentials=creds)
 
 
