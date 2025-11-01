@@ -59,6 +59,8 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 [Files]
 ; Onedir app folder
 Source: "{#DistRoot}\{#AppFolderName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Ensure main EXE is present at root (redundant but defensive)
+Source: "{#DistRoot}\{#AppFolderName}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; Updater stub (if present)
 Source: "{#DistRoot}\{#AppFolderName}\eF Drift Car Scrutineer Updater.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 ; Docs and version
@@ -70,4 +72,6 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
+; Use cmd /C start to avoid path/quoting quirks after install
+; Escape backslashes and quotes for Inno Setup
+Filename: "{cmd}"; Parameters: "/C start "" ""{app}\{#AppExeName}"""; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent

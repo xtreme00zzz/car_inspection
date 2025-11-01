@@ -79,15 +79,15 @@ def main() -> int:
     ap.add_argument('--folder-id', required=True)
     args = ap.parse_args()
 
-    sa_b64 = os.getenv('GDRIVE_SERVICE_ACCOUNT_JSON')
-    svc = None
-    if sa_b64:
-        try:
-            svc = _service_from_sa_b64(sa_b64)
-        except Exception:
-            svc = None
+    # Prefer OAuth (user Drive) because Service Accounts lack My Drive quota
+    svc = _service_from_oauth_env()
     if svc is None:
-        svc = _service_from_oauth_env()
+        sa_b64 = os.getenv('GDRIVE_SERVICE_ACCOUNT_JSON')
+        if sa_b64:
+            try:
+                svc = _service_from_sa_b64(sa_b64)
+            except Exception:
+                svc = None
     if svc is None:
         print('No Drive credentials available; skipping cleanup')
         return 0
@@ -96,4 +96,3 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
-
