@@ -37,7 +37,7 @@ set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
   --icon "%ICON_PATH%" --name "%APP_NAME%" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ^
-  %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" ^
+  %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" -- ^
   "%REPO%\ui_app.py"
 if errorlevel 1 goto :error
 
@@ -53,7 +53,7 @@ set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
 call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
   --icon "%ICON_PATH%" --name "%APP_NAME%" ^
   --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ^
-  %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" ^
+  %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" -- ^
   "%REPO%\ui_app.py"
 if errorlevel 1 goto :error
 
