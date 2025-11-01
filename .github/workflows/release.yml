@@ -90,6 +90,12 @@ jobs:
         run: |
           echo "installer=dist/_installer/efdrift-scrutineer-setup.exe" >> $GITHUB_OUTPUT
 
+      - name: Clean Google Drive folder (keep it fresh)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          python build\drive_cleanup.py --folder-id "$env:GDRIVE_FOLDER_ID"
+
       - name: Upload installer to Google Drive (Service Account)
         id: drive
         continue-on-error: true
@@ -103,6 +109,7 @@ jobs:
       - name: Upload installer to Google Drive (OAuth User)
         id: drive_oauth
         continue-on-error: true
+        if: ${{ steps.drive.outcome != 'success' || steps.drive.outputs.id == '' }}
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:GDRIVE_CLIENT_ID) -or [string]::IsNullOrWhiteSpace($env:GDRIVE_CLIENT_SECRET) -or [string]::IsNullOrWhiteSpace($env:GDRIVE_REFRESH_TOKEN)) {

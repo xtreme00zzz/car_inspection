@@ -1,0 +1,99 @@
+import argparse
+import base64
+import json
+import os
+from pathlib import Path
+
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+
+
+def _service_from_sa_b64(sa_b64: str):
+    try:
+        raw = base64.b64decode(sa_b64).decode('utf-8')
+    except Exception:
+        raw = sa_b64
+    try:
+        info = json.loads(raw)
+    except Exception:
+        raise SystemExit('Invalid service account JSON')
+    creds = service_account.Credentials.from_service_account_info(
+        info, scopes=['https://www.googleapis.com/auth/drive']
+    )
+    return build('drive', 'v3', credentials=creds)
+
+
+def _service_from_oauth_env():
+    cid = os.getenv('GDRIVE_CLIENT_ID')
+    csec = os.getenv('GDRIVE_CLIENT_SECRET')
+    rtok = os.getenv('GDRIVE_REFRESH_TOKEN')
+    if not (cid and csec and rtok):
+        return None
+    creds = Credentials(
+        token=None,
+        refresh_token=rtok,
+        token_uri='https://oauth2.googleapis.com/token',
+        client_id=cid,
+        client_secret=csec,
+        scopes=['https://www.googleapis.com/auth/drive']
+    )
+    creds.refresh(Request())
+    return build('drive', 'v3', credentials=creds)
+
+
+def cleanup_folder(svc, folder_id: str) -> int:
+    if not folder_id:
+        print('No folder id; skip cleanup')
+        return 0
+    q = f"'{folder_id}' in parents and trashed = false"
+    page_token = None
+    deleted = 0
+    while True:
+        resp = svc.files().list(
+            q=q,
+            fields='nextPageToken, files(id,name)',
+            pageSize=1000,
+            pageToken=page_token,
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+        ).execute()
+        for f in resp.get('files', []):
+            try:
+                svc.files().delete(fileId=f['id'], supportsAllDrives=True).execute()
+                deleted += 1
+                print(f"deleted: {f.get('name')} ({f.get('id')})")
+            except HttpError as e:
+                print(f"warn: failed to delete {f.get('id')}: {e}")
+        page_token = resp.get('nextPageToken')
+        if not page_token:
+            break
+    print(f"cleanup: removed {deleted} file(s) from folder {folder_id}")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description='Delete all files in a Google Drive folder (Shared Drives supported).')
+    ap.add_argument('--folder-id', required=True)
+    args = ap.parse_args()
+
+    sa_b64 = os.getenv('GDRIVE_SERVICE_ACCOUNT_JSON')
+    svc = None
+    if sa_b64:
+        try:
+            svc = _service_from_sa_b64(sa_b64)
+        except Exception:
+            svc = None
+    if svc is None:
+        svc = _service_from_oauth_env()
+    if svc is None:
+        print('No Drive credentials available; skipping cleanup')
+        return 0
+    return cleanup_folder(svc, args.folder_id)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
+
