@@ -20,23 +20,6 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      - name: Verify version matches tag
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          APP=$(python - << 'PY'
-          import re
-          s=open('app_version.py','r',encoding='utf-8').read()
-          m=re.search(r'APP_VERSION\s*=\s*"([0-9.]+)"', s)
-          print(m.group(1) if m else '')
-          PY
-          )
-          echo "Tag=$TAG App=$APP"
-          if [ "$TAG" != "$APP" ]; then
-            echo "Version mismatch: tag $TAG != app $APP" >&2
-            exit 1
-          fi
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -44,6 +27,33 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Verify version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          python - << 'PY'
+          import os, re, sys, pathlib
+          ref = os.getenv('REF_NAME', '')
+          tag = re.sub(r'^v', '', ref)
+          try:
+              s = pathlib.Path('app_version.py').read_text(encoding='utf-8')
+          except FileNotFoundError:
+              print('Error: app_version.py not found', file=sys.stderr)
+              sys.exit(1)
+          m = re.search(r'APP_VERSION\s*=\s*"([0-9.]+)"', s)
+          app = m.group(1) if m else ''
+          print(f'Tag={tag} App={app}')
+          if not app:
+              print('Error: APP_VERSION not found', file=sys.stderr)
+              sys.exit(1)
+          if tag != app:
+              print(f'Version mismatch: tag {tag} != app {app}', file=sys.stderr)
+              sys.exit(1)
+          PY
+      
 
       - name: Install Python deps
         run: |
@@ -188,3 +198,4 @@ jobs:
           files: |
             build/eF Drift Car Scrutineer.exe
           token: ${{ secrets.GITHUB_TOKEN }}
+
