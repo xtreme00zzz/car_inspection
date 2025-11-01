@@ -5,6 +5,7 @@ REM Windows release build script (one-dir, one-file, payload, updater)
 REM Derives repo root from this script's location
 set "REPO=%~dp0.."
 set "APP_NAME=eF Drift Car Scrutineer"
+set "APP_NAME_FILE=efdrift-scrutineer"
 set "PY=%REPO%\.venv-alpha-win\Scripts\python.exe"
 if not exist "%PY%" set "PY=python"
 pushd "%REPO%"
@@ -27,28 +28,40 @@ if exist "dist\release_payload" rmdir /s /q "dist\release_payload"
 if not exist "dist" mkdir "dist"
 
 echo [2/6] Building release onedir distribution...
-set "OD1=" & set "OD2="
+set "OD_REF="
 if not "%NO_REF_DATA%"=="1" (
   if exist "%REPO%\reference_cars" (
-    set "OD1=--add-data" & set "OD2=%REPO%\reference_cars;reference_cars"
+    set "OD_REF=--add-data \"%REPO%\reference_cars;reference_cars\""
   )
 )
-set "OD3=--add-data" & set "OD4=%ICON_PATH%;."
-set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" -- "%REPO%\ui_app.py"
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
+  --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" ^
+  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ^
+  %OD_REF% -- "%REPO%\ui_app.py"
 if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
-set "AA1=" & set "AA2="
+set "OF_REF="
 if not "%NO_REF_DATA%"=="1" (
   if exist "%REPO%\reference_cars" (
-    set "AA1=--add-data" & set "AA2=%REPO%\reference_cars;reference_cars"
+    set "OF_REF=--add-data \"%REPO%\reference_cars;reference_cars\""
   )
 )
-set "AA3=--add-data" & set "AA4=%ICON_PATH%;."
-set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" -- "%REPO%\ui_app.py"
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
+  --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" ^
+  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ^
+  %OF_REF% -- "%REPO%\ui_app.py"
 if errorlevel 1 goto :error
+
+rem Rename artifacts to friendly display names with spaces
+if exist "%REPO%\dist\%APP_NAME_FILE%" (
+  if exist "%REPO%\dist\%APP_NAME%" rmdir /s /q "%REPO%\dist\%APP_NAME%"
+  ren "%REPO%\dist\%APP_NAME_FILE%" "%APP_NAME%"
+)
+if exist "%REPO%\dist\%APP_NAME_FILE%.exe" (
+  del /f /q "%REPO%\dist\%APP_NAME%.exe" 2>nul
+  ren "%REPO%\dist\%APP_NAME_FILE%.exe" "%APP_NAME%.exe"
+)
 
 if not exist "%REPO%\dist\%APP_NAME%" (
   echo Onedir release build missing at "dist\%APP_NAME%"
