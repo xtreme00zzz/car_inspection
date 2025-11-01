@@ -28,6 +28,18 @@ def upload_file(creds, folder_id: str, file_path: Path, name: str | None = None)
     metadata = {'name': name or file_path.name}
     if folder_id:
         metadata['parents'] = [folder_id]
+    # Proactively delete existing files with the same name in the folder to avoid duplicates
+    try:
+        if folder_id:
+            q = f"name = '{metadata['name'].replace("'", "\\'")}' and '{folder_id}' in parents and trashed = false"
+        else:
+            q = f"name = '{metadata['name'].replace("'", "\\'")}' and trashed = false"
+        resp = svc.files().list(q=q, fields='files(id,name)', pageSize=1000,
+                                supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+        for f in resp.get('files', []):
+            svc.files().delete(fileId=f['id'], supportsAllDrives=True).execute()
+    except Exception:
+        pass
     media = MediaFileUpload(str(file_path), resumable=True)
     # supportsAllDrives helps when uploading to Shared Drives
     file = svc.files().create(body=metadata, media_body=media, fields='id,name,size', supportsAllDrives=True).execute()

@@ -45,6 +45,34 @@ def start_resumable(access_token: str, name: str, size: int, folder_id: str | No
         return upload_url
 
 
+def list_by_name(access_token: str, name: str, folder_id: str | None) -> list[dict]:
+    q = ["name = '" + name.replace("'", "\\'") + "'", "trashed = false"]
+    if folder_id:
+        q.append("'" + folder_id + "' in parents")
+    params = urllib.parse.urlencode({
+        'q': ' and '.join(q),
+        'fields': 'files(id,name)',
+        'pageSize': 1000,
+        'supportsAllDrives': 'true',
+        'includeItemsFromAllDrives': 'true',
+        'spaces': 'drive',
+    })
+    url = FILES_URL + '?' + params
+    req = urllib.request.Request(url, method='GET')
+    req.add_header('Authorization', f'Bearer {access_token}')
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        payload = json.loads(resp.read().decode('utf-8', errors='replace'))
+        return payload.get('files', [])
+
+
+def delete_file(access_token: str, file_id: str) -> None:
+    url = f"{FILES_URL}/{urllib.parse.quote(file_id)}?supportsAllDrives=true"
+    req = urllib.request.Request(url, method='DELETE')
+    req.add_header('Authorization', f'Bearer {access_token}')
+    with urllib.request.urlopen(req, timeout=30):
+        pass
+
+
 def upload_chunks(upload_url: str, file_path: Path, chunk_size: int = 8 * 1024 * 1024) -> dict:
     total = file_path.stat().st_size
     sent = 0
@@ -115,6 +143,12 @@ def main() -> int:
     size = file_path.stat().st_size
 
     token = get_access_token(args.client_id, args.client_secret, args.refresh_token)
+    # Proactively delete existing files with the same name in the folder
+    try:
+        for f in list_by_name(token, name, args.folder):
+            delete_file(token, f.get('id', ''))
+    except Exception:
+        pass
     upload_url = start_resumable(token, name, size, args.folder)
     info = upload_chunks(upload_url, file_path)
     file_id = info.get("id") if isinstance(info, dict) else None
@@ -132,4 +166,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
