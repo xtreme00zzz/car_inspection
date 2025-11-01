@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: windows-latest
@@ -78,7 +81,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist\update.json
-            build\eF Drift Car Scrutineer.exe
-            dist\_installer\efdrift-scrutineer-setup.exe
+            dist/update.json
+            build/eF Drift Car Scrutineer.exe
+            dist/_installer/efdrift-scrutineer-setup.exe
           token: ${{ secrets.GITHUB_TOKEN }}
