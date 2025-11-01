@@ -41,14 +41,14 @@ jobs:
 
       - name: Upload installer to Google Drive (Service Account)
         id: drive
-        if: ${{ (secrets.GDRIVE_SERVICE_ACCOUNT_JSON != '' || vars.GDRIVE_SERVICE_ACCOUNT_JSON != '') && (secrets.GDRIVE_FOLDER_ID != '' || vars.GDRIVE_FOLDER_ID != '') }}
+        continue-on-error: true
         env:
-          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON || vars.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
         run: |
-          python build\upload_to_drive_sa.py --file "${{ steps.find_installer.outputs.installer }}" --folder-id "${{ secrets.GDRIVE_FOLDER_ID || vars.GDRIVE_FOLDER_ID }}"
+          python build\upload_to_drive_sa.py --file "${{ steps.find_installer.outputs.installer }}" --folder-id "${{ secrets.GDRIVE_FOLDER_ID }}"
 
       - name: Build bootstrap EXE (downloads Drive ID)
-        if: ${{ steps.drive.outputs.id != '' }}
+        if: ${{ steps.drive.outcome == 'success' && steps.drive.outputs.id != '' }}
         shell: bash
         env:
           EF_SCRUTINEER_DRIVE_ID: ${{ steps.drive.outputs.id }}
@@ -64,9 +64,15 @@ jobs:
           PY
           pyinstaller --noconfirm --clean --log-level WARN --onefile --console --name "eF Drift Car Scrutineer" --distpath build --workpath build\bootstrap-build --specpath build tools\net_installer_stub.py
 
-      - name: Create update.json manifest (Drive or GitHub URL)
+      - name: Create update.json manifest (Drive URL)
+        if: ${{ steps.drive.outcome == 'success' && steps.drive.outputs.url != '' }}
         run: |
-          python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "${{ steps.drive.outputs.url || format('https://github.com/{0}/releases/download/{1}/efdrift-scrutineer-setup.exe', github.repository, github.ref_name) }}" --out "dist\update.json"
+          python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "${{ steps.drive.outputs.url }}" --out "dist\update.json"
+
+      - name: Create update.json manifest (GitHub URL fallback)
+        if: ${{ steps.drive.outcome != 'success' || steps.drive.outputs.url == '' }}
+        run: |
+          python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/efdrift-scrutineer-setup.exe" --out "dist\update.json"
 
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
