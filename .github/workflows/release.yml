@@ -52,6 +52,12 @@ jobs:
           SA_JSON_VAR: ${{ vars.GDRIVE_SERVICE_ACCOUNT_JSON }}
           FOLDER_SECRET: ${{ secrets.GDRIVE_FOLDER_ID }}
           FOLDER_VAR: ${{ vars.GDRIVE_FOLDER_ID }}
+          OAUTH_ID_SECRET: ${{ secrets.GDRIVE_CLIENT_ID }}
+          OAUTH_ID_VAR: ${{ vars.GDRIVE_CLIENT_ID }}
+          OAUTH_SECRET_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          OAUTH_SECRET_VAR: ${{ vars.GDRIVE_CLIENT_SECRET }}
+          OAUTH_REFRESH_SECRET: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          OAUTH_REFRESH_VAR: ${{ vars.GDRIVE_REFRESH_TOKEN }}
         run: |
           $json = $env:INPUT_JSON
           if ([string]::IsNullOrWhiteSpace($json)) { $json = $env:SA_JSON_SECRET }
@@ -71,6 +77,12 @@ jobs:
           if (-not [string]::IsNullOrWhiteSpace($fid)) {
             Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$fid"
           }
+          if (-not [string]::IsNullOrWhiteSpace($env:OAUTH_ID_SECRET)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_CLIENT_ID=$($env:OAUTH_ID_SECRET)" }
+          elseif (-not [string]::IsNullOrWhiteSpace($env:OAUTH_ID_VAR)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_CLIENT_ID=$($env:OAUTH_ID_VAR)" }
+          if (-not [string]::IsNullOrWhiteSpace($env:OAUTH_SECRET_SECRET)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_CLIENT_SECRET=$($env:OAUTH_SECRET_SECRET)" }
+          elseif (-not [string]::IsNullOrWhiteSpace($env:OAUTH_SECRET_VAR)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_CLIENT_SECRET=$($env:OAUTH_SECRET_VAR)" }
+          if (-not [string]::IsNullOrWhiteSpace($env:OAUTH_REFRESH_SECRET)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_REFRESH_TOKEN=$($env:OAUTH_REFRESH_SECRET)" }
+          elseif (-not [string]::IsNullOrWhiteSpace($env:OAUTH_REFRESH_VAR)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_REFRESH_TOKEN=$($env:OAUTH_REFRESH_VAR)" }
 
       - name: Find installer
         id: find_installer
@@ -88,11 +100,33 @@ jobs:
           }
           python build\upload_to_drive_sa.py --file "${{ steps.find_installer.outputs.installer }}" --folder-id "$env:GDRIVE_FOLDER_ID"
 
+      - name: Upload installer to Google Drive (OAuth User)
+        id: drive_oauth
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:GDRIVE_CLIENT_ID) -or [string]::IsNullOrWhiteSpace($env:GDRIVE_CLIENT_SECRET) -or [string]::IsNullOrWhiteSpace($env:GDRIVE_REFRESH_TOKEN)) {
+            Write-Host "OAuth not configured; skipping OAuth Drive upload."; exit 0
+          }
+          $outfile = 'drive_upload.txt'
+          $psi = @(
+            'build\gdrive_upload.py', '--file', "${{ steps.find_installer.outputs.installer }}",
+            '--name', 'efdrift-scrutineer-setup.exe', '--folder', "$env:GDRIVE_FOLDER_ID",
+            '--client-id', "$env:GDRIVE_CLIENT_ID", '--client-secret', "$env:GDRIVE_CLIENT_SECRET",
+            '--refresh-token', "$env:GDRIVE_REFRESH_TOKEN"
+          )
+          $p = Start-Process -FilePath 'python' -ArgumentList $psi -PassThru -NoNewWindow -RedirectStandardOutput $outfile -Wait
+          $text = Get-Content $outfile -Raw
+          Write-Host $text
+          if ($p.ExitCode -ne 0) { exit $p.ExitCode }
+          if ($text -match 'FILE_ID=(.+)') { Add-Content -Path $env:GITHUB_OUTPUT -Value ("id=" + $Matches[1].Trim()) }
+          if ($text -match 'PUBLIC_URL=(.+)') { Add-Content -Path $env:GITHUB_OUTPUT -Value ("url=" + $Matches[1].Trim()) }
+
       - name: Build bootstrap EXE (downloads Drive ID)
-        if: ${{ steps.drive.outcome == 'success' && steps.drive.outputs.id != '' }}
+        if: ${{ (steps.drive.outcome == 'success' && steps.drive.outputs.id != '') || (steps.drive_oauth.outcome == 'success' && steps.drive_oauth.outputs.id != '') }}
         shell: bash
         env:
-          EF_SCRUTINEER_DRIVE_ID: ${{ steps.drive.outputs.id }}
+          EF_SCRUTINEER_DRIVE_ID: ${{ steps.drive.outputs.id || steps.drive_oauth.outputs.id }}
         run: |
           python - << 'PY'
           from pathlib import Path
@@ -106,9 +140,9 @@ jobs:
           pyinstaller --noconfirm --clean --log-level WARN --onefile --console --name "eF Drift Car Scrutineer" --distpath build --workpath build\bootstrap-build --specpath build tools\net_installer_stub.py
 
       - name: Create update.json manifest (Drive URL)
-        if: ${{ steps.drive.outcome == 'success' && steps.drive.outputs.url != '' }}
+        if: ${{ (steps.drive.outcome == 'success' && steps.drive.outputs.url != '') || (steps.drive_oauth.outcome == 'success' && steps.drive_oauth.outputs.url != '') }}
         run: |
-          python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "${{ steps.drive.outputs.url }}" --out "dist\update.json"
+          python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "${{ steps.drive.outputs.url || steps.drive_oauth.outputs.url }}" --out "dist\update.json"
 
       - name: Create update.json manifest (GitHub URL fallback)
         if: ${{ steps.drive.outcome != 'success' || steps.drive.outputs.url == '' }}
