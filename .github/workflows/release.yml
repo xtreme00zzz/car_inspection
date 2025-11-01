@@ -137,7 +137,7 @@ jobs:
           t=t.replace('os.getenv("EF_SCRUTINEER_DRIVE_ID", "1Lwp_TtjGY0tHmF91PfCt8GoyLKGeKi28")', f'os.getenv("EF_SCRUTINEER_DRIVE_ID", "{did}")')
           p.write_text(t,encoding='utf-8')
           PY
-          pyinstaller --noconfirm --clean --log-level WARN --onefile --console --name "eF Drift Car Scrutineer" --distpath build --workpath build\bootstrap-build --specpath build tools\net_installer_stub.py
+          python -m PyInstaller --noconfirm --clean --log-level WARN --onefile --console --name "eF Drift Car Scrutineer" --distpath build --workpath build/bootstrap-build --specpath build tools/net_installer_stub.py
 
       - name: Create update.json manifest (Drive URL)
         if: ${{ (steps.drive.outcome == 'success' && steps.drive.outputs.url != '') || (steps.drive_oauth.outcome == 'success' && steps.drive_oauth.outputs.url != '') }}
