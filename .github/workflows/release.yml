@@ -44,15 +44,21 @@ jobs:
           FOLDER_SECRET: ${{ secrets.GDRIVE_FOLDER_ID }}
           FOLDER_VAR: ${{ vars.GDRIVE_FOLDER_ID }}
         run: |
-          if (-not [string]::IsNullOrWhiteSpace($env:SA_JSON_SECRET)) {
-            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_SERVICE_ACCOUNT_JSON=$($env:SA_JSON_SECRET)"
-          } elseif (-not [string]::IsNullOrWhiteSpace($env:SA_JSON_VAR)) {
-            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_SERVICE_ACCOUNT_JSON=$($env:SA_JSON_VAR)"
+          $json = $env:SA_JSON_SECRET
+          if ([string]::IsNullOrWhiteSpace($json)) { $json = $env:SA_JSON_VAR }
+          if (-not [string]::IsNullOrWhiteSpace($json)) {
+            # Normalize to base64 to avoid multi-line env issues
+            if ($json.Trim().StartsWith('{')) {
+              $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json))
+            } else {
+              $b64 = $json
+            }
+            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_SERVICE_ACCOUNT_JSON=$b64"
           }
-          if (-not [string]::IsNullOrWhiteSpace($env:FOLDER_SECRET)) {
-            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$($env:FOLDER_SECRET)"
-          } elseif (-not [string]::IsNullOrWhiteSpace($env:FOLDER_VAR)) {
-            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$($env:FOLDER_VAR)"
+          $fid = $env:FOLDER_SECRET
+          if ([string]::IsNullOrWhiteSpace($fid)) { $fid = $env:FOLDER_VAR }
+          if (-not [string]::IsNullOrWhiteSpace($fid)) {
+            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$fid"
           }
 
       - name: Find installer
