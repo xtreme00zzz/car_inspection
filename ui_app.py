@@ -189,12 +189,12 @@ class InspectorUI(tk.Tk):
                     with Image.open(icon_path) as im:
                         # Convert to a Tk-compatible image
                         icon_img = ImageTk.PhotoImage(im)
-                self.iconphoto(False, icon_img)
+                self.iconphoto(True, icon_img)
                 self._icon_images.append(icon_img)
             except Exception:
                 try:
                     icon_img = tk.PhotoImage(file=str(icon_path))
-                    self.iconphoto(False, icon_img)
+                    self.iconphoto(True, icon_img)
                     self._icon_images.append(icon_img)
                 except Exception:
                     pass
