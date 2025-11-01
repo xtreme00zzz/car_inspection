@@ -35,11 +35,7 @@ if not "%NO_REF_DATA%"=="1" (
 )
 set "OD3=--add-data" & set "OD4=%ICON_PATH%;."
 set "OD5=--add-data" & set "OD6=%REPO%\README.md;."
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
-  --icon "%ICON_PATH%" --name "%APP_NAME%" ^
-  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ^
-  %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" -- ^
-  "%REPO%\ui_app.py"
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" %OD1% "%OD2%" %OD3% "%OD4%" %OD5% "%OD6%" -- "%REPO%\ui_app.py"
 if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
@@ -51,11 +47,7 @@ if not "%NO_REF_DATA%"=="1" (
 )
 set "AA3=--add-data" & set "AA4=%ICON_PATH%;."
 set "AA5=--add-data" & set "AA6=%REPO%\README.md;."
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
-  --icon "%ICON_PATH%" --name "%APP_NAME%" ^
-  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ^
-  %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" -- ^
-  "%REPO%\ui_app.py"
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" %AA1% "%AA2%" %AA3% "%AA4%" %AA5% "%AA6%" -- "%REPO%\ui_app.py"
 if errorlevel 1 goto :error
 
 if not exist "%REPO%\dist\%APP_NAME%" (

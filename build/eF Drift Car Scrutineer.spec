@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['C:\\Users\\alexa\\Documents\\bot development\\eF Bot v2.1\\car_inspection\\build\\..\\ui_app.py'],
+    ['..\\tools\\net_installer_stub.py'],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Users\\alexa\\Documents\\bot development\\eF Bot v2.1\\car_inspection\\build\\..\\reference_cars', 'reference_cars'), ('C:\\Users\\alexa\\Documents\\bot development\\eF Bot v2.1\\car_inspection\\build\\..\\icon.ico', '.'), ('C:\\Users\\alexa\\Documents\\bot development\\eF Bot v2.1\\car_inspection\\build\\..\\README.md', '.')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -28,11 +28,10 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\Users\\alexa\\Documents\\bot development\\eF Bot v2.1\\car_inspection\\icon.ico'],
 )

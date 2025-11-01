@@ -1,54 +1,75 @@
-name: Build Windows App and Installer
+name: Windows Release (Drive + GitHub)
 
 on:
   push:
     tags:
       - 'v*'
-      - '*.*.*'
-  workflow_dispatch:
 
 jobs:
-  build-windows:
+  release:
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install build dependencies
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -r build/requirements-alpha.txt
+          pip install google-api-python-client google-auth google-auth-httplib2 pyinstaller
 
-      - name: Build app (onedir + onefile)
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup -y
+
+      - name: Build Windows artifacts (onedir, onefile, installer)
         shell: cmd
-        run: build\win_build_release.bat
+        run: |
+          call build\win_build_release.bat
 
-      - name: Install Inno Setup (for ISCC)
-        shell: powershell
-        run: choco install innosetup -y --no-progress
+      - name: Find installer
+        id: find_installer
+        shell: bash
+        run: |
+          echo "installer=dist/_installer/efdrift-scrutineer-setup.exe" >> $GITHUB_OUTPUT
 
-      - name: Build installer
-        shell: cmd
-        run: build\run_iscc.bat
+      - name: Upload installer to Google Drive (Service Account)
+        id: drive
+        env:
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          python build\upload_to_drive_sa.py --file "${{ steps.find_installer.outputs.installer }}" --folder-id "${{ secrets.GDRIVE_FOLDER_ID }}"
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-build
-          path: |
-            dist/eF Drift Car Scrutineer.exe
-            dist/efdrift-scrutineer-setup-*.exe
-            dist/eF Drift Car Scrutineer/**
+      - name: Build bootstrap EXE (downloads Drive ID)
+        shell: bash
+        env:
+          EF_SCRUTINEER_DRIVE_ID: ${{ steps.drive.outputs.id }}
+        run: |
+          python - << 'PY'
+          from pathlib import Path
+          p=Path('tools/net_installer_stub.py')
+          t=p.read_text(encoding='utf-8')
+          import os
+          did=os.environ.get('EF_SCRUTINEER_DRIVE_ID','').strip()
+          t=t.replace('os.getenv("EF_SCRUTINEER_DRIVE_ID", "1Lwp_TtjGY0tHmF91PfCt8GoyLKGeKi28")', f'os.getenv("EF_SCRUTINEER_DRIVE_ID", "{did}")')
+          p.write_text(t,encoding='utf-8')
+          PY
+          pyinstaller --noconfirm --clean --log-level WARN --onefile --console --name "eF Drift Car Scrutineer" --distpath build --workpath build\bootstrap-build --specpath build tools\net_installer_stub.py
 
-      - name: Attach to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Create update.json manifest (Drive URL)
+        run: |
+          python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "${{ steps.drive.outputs.url }}" --out "dist\update.json"
+
+      - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/eF Drift Car Scrutineer.exe
-            dist/efdrift-scrutineer-setup-*.exe
+            dist\update.json
+            build\eF Drift Car Scrutineer.exe
+          token: ${{ secrets.GITHUB_TOKEN }}
+

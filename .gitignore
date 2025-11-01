@@ -13,6 +13,10 @@ dist/
 reference_cars/
 reports/
 
+# Local release env (do not commit secrets)
+build/release.env
+build/release.env.bak
+
 # Generated reference payloads (not tracked)
 build/reference_cars_*/
 
