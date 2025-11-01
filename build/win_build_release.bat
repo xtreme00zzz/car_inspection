@@ -18,7 +18,8 @@ set "NO_REF_DATA=%NO_REF_DATA%"
 set "MAIN=%REPO%\ui_app.py"
 set "DOWNLOAD_REF_SCRIPT=%REPO%\build\download_reference_pack.py"
 set "FORCE_REF_DOWNLOAD=%FORCE_REF_DOWNLOAD%"
-set "PY_DATA_ARGS="
+set "REF_DATA_ARG="
+set "ICON_DATA_ARG="
 
 echo [1/6] Cleaning previous release build artifacts...
 if exist "build\pyinstaller-build-release" rmdir /s /q "build\pyinstaller-build-release"
@@ -61,30 +62,22 @@ if errorlevel 1 goto :error
 
 rem Prepare shared PyInstaller data arguments (reference pack + icon)
 set "PY_DATA_ARGS="
-if exist "%REPO%\reference_cars" (
-  set "PY_DATA_ARGS=--add-data ""%REPO%\reference_cars;reference_cars"""
-)
-if exist "%ICON_PATH%" (
-  if defined PY_DATA_ARGS (
-    set "PY_DATA_ARGS=%PY_DATA_ARGS% --add-data ""%ICON_PATH%;icon.ico"""
-  ) else (
-    set "PY_DATA_ARGS=--add-data ""%ICON_PATH%;icon.ico"""
-  )
-)
+if exist "%REPO%\reference_cars" set "REF_DATA_ARG=--add-data ""%REPO%\reference_cars;reference_cars"""
+if exist "%ICON_PATH%" set "ICON_DATA_ARG=--add-data ""%ICON_PATH%;icon.ico"""
 
 echo [2/6] Building release onedir distribution...
 if exist "%PY%" (
-  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" %PY_DATA_ARGS% ui_app.py
+  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" %REF_DATA_ARG% %ICON_DATA_ARG% ui_app.py
 ) else (
-  call pyinstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" %PY_DATA_ARGS% ui_app.py
+  call pyinstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" %REF_DATA_ARG% %ICON_DATA_ARG% ui_app.py
 )
 if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
 if exist "%PY%" (
-  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" %PY_DATA_ARGS% ui_app.py
+  call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" %REF_DATA_ARG% %ICON_DATA_ARG% ui_app.py
 ) else (
-  call pyinstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" %PY_DATA_ARGS% ui_app.py
+  call pyinstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" %REF_DATA_ARG% %ICON_DATA_ARG% ui_app.py
 )
 if errorlevel 1 goto :error
 
