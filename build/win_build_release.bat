@@ -28,29 +28,11 @@ if exist "dist\release_payload" rmdir /s /q "dist\release_payload"
 if not exist "dist" mkdir "dist"
 
 echo [2/6] Building release onedir distribution...
-set "OD_REF="
-if not "%NO_REF_DATA%"=="1" (
-  if exist "%REPO%\reference_cars" (
-    set "OD_REF=--add-data \"%REPO%\reference_cars;reference_cars\""
-  )
-)
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed ^
-  --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" ^
-  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" ^
-  %OD_REF% -- "%REPO%\ui_app.py"
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onedir --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release" --specpath "%REPO%\build" -- ui_app.py
 if errorlevel 1 goto :error
 
 echo [3/6] Building release onefile executable...
-set "OF_REF="
-if not "%NO_REF_DATA%"=="1" (
-  if exist "%REPO%\reference_cars" (
-    set "OF_REF=--add-data \"%REPO%\reference_cars;reference_cars\""
-  )
-)
-call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed ^
-  --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" ^
-  --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" ^
-  %OF_REF% -- "%REPO%\ui_app.py"
+call "%PY%" -m PyInstaller --noconfirm --clean --log-level=WARN --onefile --windowed --icon "%ICON_PATH%" --name "%APP_NAME_FILE%" --distpath "%REPO%\dist" --workpath "%REPO%\build\pyinstaller-build-release-onefile" --specpath "%REPO%\build" -- ui_app.py
 if errorlevel 1 goto :error
 
 rem Rename artifacts to friendly display names with spaces
