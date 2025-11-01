@@ -47,6 +47,11 @@ if exist "%REPO%\dist\%APP_NAME_FILE%" (
   if exist "%REPO%\dist\%APP_NAME%" rmdir /s /q "%REPO%\dist\%APP_NAME%"
   ren "%REPO%\dist\%APP_NAME_FILE%" "%APP_NAME%"
 )
+rem Ensure the exe INSIDE the onedir folder matches the friendly name
+if exist "%REPO%\dist\%APP_NAME%\%APP_NAME_FILE%.exe" (
+  del /f /q "%REPO%\dist\%APP_NAME%\%APP_NAME%.exe" 2>nul
+  ren "%REPO%\dist\%APP_NAME%\%APP_NAME_FILE%.exe" "%APP_NAME%.exe"
+)
 if exist "%REPO%\dist\%APP_NAME_FILE%.exe" (
   del /f /q "%REPO%\dist\%APP_NAME%.exe" 2>nul
   ren "%REPO%\dist\%APP_NAME_FILE%.exe" "%APP_NAME%.exe"
