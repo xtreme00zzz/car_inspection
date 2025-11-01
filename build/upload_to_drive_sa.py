@@ -7,6 +7,7 @@ from pathlib import Path
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from googleapiclient.errors import HttpError, ResumableUploadError
 
 
 def get_credentials(sa_json: str):
@@ -28,10 +29,11 @@ def upload_file(creds, folder_id: str, file_path: Path, name: str | None = None)
     if folder_id:
         metadata['parents'] = [folder_id]
     media = MediaFileUpload(str(file_path), resumable=True)
-    file = svc.files().create(body=metadata, media_body=media, fields='id,name,size').execute()
+    # supportsAllDrives helps when uploading to Shared Drives
+    file = svc.files().create(body=metadata, media_body=media, fields='id,name,size', supportsAllDrives=True).execute()
     fid = file['id']
     # Make public
-    svc.permissions().create(fileId=fid, body={'type': 'anyone', 'role': 'reader'}).execute()
+    svc.permissions().create(fileId=fid, body={'type': 'anyone', 'role': 'reader'}, supportsAllDrives=True).execute()
     url = f'https://drive.google.com/uc?export=download&id={fid}'
     return {'id': fid, 'name': file.get('name'), 'size': int(file.get('size', 0)), 'url': url}
 
@@ -50,7 +52,15 @@ def main() -> int:
     if not p.exists():
         raise SystemExit(f'File not found: {p}')
     creds = get_credentials(sa_json)
-    info = upload_file(creds, args.folder_id, p, args.name)
+    try:
+        info = upload_file(creds, args.folder_id, p, args.name)
+    except (ResumableUploadError, HttpError) as e:
+        # Gracefully skip when service account lacks storage quota (My Drive). Allow workflow to continue.
+        msg = str(getattr(e, 'error_details', '')) or str(e)
+        if 'storage quota' in msg.lower() or 'storageQuotaExceeded' in msg:
+            print('Service account cannot upload to My Drive (no quota). Skipping Drive upload and falling back.', flush=True)
+            return 0
+        raise
     # Plain output
     print(f"ID={info['id']}")
     print(f"URL={info['url']}")
@@ -67,4 +77,3 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
-

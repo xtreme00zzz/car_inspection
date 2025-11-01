@@ -4,7 +4,14 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      drive_json_b64:
+        description: 'Base64 service account JSON (optional)'
+        required: false
+      drive_folder_id:
+        description: 'Google Drive folder ID (optional)'
+        required: false
 
 permissions:
   contents: write
@@ -39,12 +46,15 @@ jobs:
       - name: Export Drive configuration
         shell: pwsh
         env:
+          INPUT_JSON: ${{ inputs.drive_json_b64 }}
+          INPUT_FOLDER: ${{ inputs.drive_folder_id }}
           SA_JSON_SECRET: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
           SA_JSON_VAR: ${{ vars.GDRIVE_SERVICE_ACCOUNT_JSON }}
           FOLDER_SECRET: ${{ secrets.GDRIVE_FOLDER_ID }}
           FOLDER_VAR: ${{ vars.GDRIVE_FOLDER_ID }}
         run: |
-          $json = $env:SA_JSON_SECRET
+          $json = $env:INPUT_JSON
+          if ([string]::IsNullOrWhiteSpace($json)) { $json = $env:SA_JSON_SECRET }
           if ([string]::IsNullOrWhiteSpace($json)) { $json = $env:SA_JSON_VAR }
           if (-not [string]::IsNullOrWhiteSpace($json)) {
             # Normalize to base64 to avoid multi-line env issues
@@ -55,7 +65,8 @@ jobs:
             }
             Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_SERVICE_ACCOUNT_JSON=$b64"
           }
-          $fid = $env:FOLDER_SECRET
+          $fid = $env:INPUT_FOLDER
+          if ([string]::IsNullOrWhiteSpace($fid)) { $fid = $env:FOLDER_SECRET }
           if ([string]::IsNullOrWhiteSpace($fid)) { $fid = $env:FOLDER_VAR }
           if (-not [string]::IsNullOrWhiteSpace($fid)) {
             Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$fid"
@@ -104,11 +115,18 @@ jobs:
         run: |
           python build\make_manifest.py --file "${{ steps.find_installer.outputs.installer }}" --name "efdrift-scrutineer-setup.exe" --url "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/efdrift-scrutineer-setup.exe" --out "dist\update.json"
 
-      - name: Upload assets to GitHub Release
+      - name: Upload assets (manifest + installer)
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/update.json
-            build/eF Drift Car Scrutineer.exe
             dist/_installer/efdrift-scrutineer-setup.exe
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload asset (bootstrap EXE)
+        if: ${{ steps.drive.outcome == 'success' && steps.drive.outputs.id != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/eF Drift Car Scrutineer.exe
           token: ${{ secrets.GITHUB_TOKEN }}
