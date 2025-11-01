@@ -72,6 +72,5 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-; Use cmd /C start to avoid path/quoting quirks after install
-; Escape backslashes and quotes for Inno Setup
-Filename: "{cmd}"; Parameters: "/C start "" ""{app}\{#AppExeName}"""; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
+; Launch installed app directly with proper working dir
+Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
