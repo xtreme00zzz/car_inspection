@@ -15,6 +15,7 @@ if not exist "%ICON_PATH%" set "ICON_PATH=%REPO%\icon.ico"
 
 rem Allow optional exclusion of heavy reference data for smaller onefile build
 set "NO_REF_DATA=%NO_REF_DATA%"
+set "MAIN=%REPO%\ui_app.py"
 
 echo [1/6] Cleaning previous release build artifacts...
 if exist "build\pyinstaller-build-release" rmdir /s /q "build\pyinstaller-build-release"
