@@ -10,7 +10,7 @@ Prerequisites
 -------------
 
 - Windows environment with Python and PyInstaller available in a virtual env (e.g., `.venv-win` or the existing `.venv-alpha-win`) using `build/requirements-alpha.txt`.
-- Reference data in `reference_cars/`.
+- Reference data in `reference_cars/`. For GitHub releases, upload a zipped `reference_cars` folder to Google Drive and (a) grant the service account access and (b) expose its file ID via the `REFERENCE_CARS_DRIVE_ID` secret/variable. The release workflow downloads and extracts it automatically before building. For local builds without Drive access, copy the folder into the repository manually.
 
 Build Steps
 ----------

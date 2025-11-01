@@ -47,11 +47,23 @@ def _default_data_root() -> Path:
 def _default_reference_root() -> Path:
     override = os.getenv('EF_SCRUTINEER_REFERENCE_ROOT')
     if override:
-        return Path(override).expanduser()
-    bundled = APP_BASE_DIR / 'reference_cars'
-    if bundled.exists():
-        return bundled
-    return Path.cwd() / 'reference_cars'
+        path = Path(override).expanduser()
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    candidates = [
+        APP_BASE_DIR / 'reference_cars',
+        Path.cwd() / 'reference_cars',
+        _default_data_root() / 'reference_cars',
+    ]
+    for candidate in candidates:
+        try:
+            if candidate.exists():
+                return candidate
+        except Exception:
+            continue
+    fallback = candidates[-1]
+    fallback.mkdir(parents=True, exist_ok=True)
+    return fallback
 
 
 @dataclass

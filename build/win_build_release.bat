@@ -16,6 +16,8 @@ if not exist "%ICON_PATH%" set "ICON_PATH=%REPO%\icon.ico"
 rem Allow optional exclusion of heavy reference data for smaller onefile build
 set "NO_REF_DATA=%NO_REF_DATA%"
 set "MAIN=%REPO%\ui_app.py"
+set "DOWNLOAD_REF_SCRIPT=%REPO%\build\download_reference_pack.py"
+set "FORCE_REF_DOWNLOAD=%FORCE_REF_DOWNLOAD%"
 
 echo [1/6] Cleaning previous release build artifacts...
 if exist "build\pyinstaller-build-release" rmdir /s /q "build\pyinstaller-build-release"
@@ -25,6 +27,25 @@ if exist "dist\%APP_NAME%" rmdir /s /q "dist\%APP_NAME%"
 if exist "dist\%APP_NAME%.exe" del /f /q "dist\%APP_NAME%.exe"
 if exist "dist\release_payload" rmdir /s /q "dist\release_payload"
 if not exist "dist" mkdir "dist"
+
+if exist "%DOWNLOAD_REF_SCRIPT%" (
+  set "NEED_REF_DOWNLOAD="
+  if /i "%FORCE_REF_DOWNLOAD%"=="true" set "NEED_REF_DOWNLOAD=1"
+  if /i "%FORCE_REF_DOWNLOAD%"=="1" set "NEED_REF_DOWNLOAD=1"
+  if not exist "%REPO%\reference_cars" set "NEED_REF_DOWNLOAD=1"
+  if defined NEED_REF_DOWNLOAD (
+    echo [Prep] Ensuring reference_cars folder is present (Drive download)...
+    set "REF_FORCE_FLAG="
+    if /i "%FORCE_REF_DOWNLOAD%"=="true" set "REF_FORCE_FLAG=--force"
+    if /i "%FORCE_REF_DOWNLOAD%"=="1" set "REF_FORCE_FLAG=--force"
+    if exist "%PY%" (
+      call "%PY%" "%DOWNLOAD_REF_SCRIPT%" --dest "%REPO%\reference_cars" --artifact "%REPO%\.cache\reference_cars.zip" %REF_FORCE_FLAG%
+    ) else (
+      call python "%DOWNLOAD_REF_SCRIPT%" --dest "%REPO%\reference_cars" --artifact "%REPO%\.cache\reference_cars.zip" %REF_FORCE_FLAG%
+    )
+    if errorlevel 1 goto :error
+  )
+)
 
 echo [2/6] Building release onedir distribution...
 set "REF_ARG="

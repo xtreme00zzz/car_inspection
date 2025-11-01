@@ -61,6 +61,19 @@ jobs:
           pip install -r build/requirements-alpha.txt
           pip install google-api-python-client google-auth google-auth-httplib2 pyinstaller
 
+      - name: Download reference_cars payload
+        shell: pwsh
+        run: |
+          if (-not (Test-Path -LiteralPath 'reference_cars')) { New-Item -ItemType Directory -Path 'reference_cars' -Force | Out-Null }
+          if ([string]::IsNullOrWhiteSpace($env:REFERENCE_CARS_DRIVE_ID)) {
+            Write-Host 'REFERENCE_CARS_DRIVE_ID not set; skipping reference pack download.'
+          } elseif ([string]::IsNullOrWhiteSpace($env:GDRIVE_SERVICE_ACCOUNT_JSON)) {
+            Write-Host 'GDRIVE_SERVICE_ACCOUNT_JSON not provided; cannot download reference pack.'
+            exit 1
+          } else {
+            python build\download_reference_pack.py --dest reference_cars --artifact .cache\reference_cars.zip --force
+          }
+
       - name: Install Inno Setup
         run: |
           choco install innosetup -y
@@ -85,6 +98,8 @@ jobs:
           OAUTH_SECRET_VAR: ${{ vars.GDRIVE_CLIENT_SECRET }}
           OAUTH_REFRESH_SECRET: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           OAUTH_REFRESH_VAR: ${{ vars.GDRIVE_REFRESH_TOKEN }}
+          REF_PACK_SECRET: ${{ secrets.REFERENCE_CARS_DRIVE_ID }}
+          REF_PACK_VAR: ${{ vars.REFERENCE_CARS_DRIVE_ID }}
         run: |
           $json = $env:INPUT_JSON
           if ([string]::IsNullOrWhiteSpace($json)) { $json = $env:SA_JSON_SECRET }
@@ -110,6 +125,11 @@ jobs:
           elseif (-not [string]::IsNullOrWhiteSpace($env:OAUTH_SECRET_VAR)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_CLIENT_SECRET=$($env:OAUTH_SECRET_VAR)" }
           if (-not [string]::IsNullOrWhiteSpace($env:OAUTH_REFRESH_SECRET)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_REFRESH_TOKEN=$($env:OAUTH_REFRESH_SECRET)" }
           elseif (-not [string]::IsNullOrWhiteSpace($env:OAUTH_REFRESH_VAR)) { Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_REFRESH_TOKEN=$($env:OAUTH_REFRESH_VAR)" }
+          $refPack = $env:REF_PACK_SECRET
+          if ([string]::IsNullOrWhiteSpace($refPack)) { $refPack = $env:REF_PACK_VAR }
+          if (-not [string]::IsNullOrWhiteSpace($refPack)) {
+            Add-Content -Path $env:GITHUB_ENV -Value "REFERENCE_CARS_DRIVE_ID=$refPack"
+          }
 
       - name: Find installer
         id: find_installer
@@ -198,4 +218,3 @@ jobs:
           files: |
             build/eF Drift Car Scrutineer.exe
           token: ${{ secrets.GITHUB_TOKEN }}
-

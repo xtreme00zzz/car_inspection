@@ -49,10 +49,23 @@ def _service_from_oauth_env():
     return build('drive', 'v3', credentials=creds)
 
 
+def _skip_ids_from_env() -> set:
+    raw = os.getenv('DRIVE_SKIP_FILE_IDS') or os.getenv('REFERENCE_CARS_DRIVE_ID')
+    if not raw:
+        return set()
+    parts = []
+    for chunk in raw.replace(',', ' ').split():
+        chunk = chunk.strip()
+        if chunk:
+            parts.append(chunk)
+    return set(parts)
+
+
 def cleanup_folder(svc, folder_id: str) -> int:
     if not folder_id:
         print('No folder id; skip cleanup')
         return 0
+    skip_ids = _skip_ids_from_env()
     q = f"'{folder_id}' in parents and trashed = false"
     page_token = None
     deleted = 0
@@ -66,12 +79,16 @@ def cleanup_folder(svc, folder_id: str) -> int:
             supportsAllDrives=True,
         ).execute()
         for f in resp.get('files', []):
+            file_id = f.get('id')
+            if file_id in skip_ids:
+                print(f"skip: preserving {f.get('name')} ({file_id})")
+                continue
             try:
-                svc.files().delete(fileId=f['id'], supportsAllDrives=True).execute()
+                svc.files().delete(fileId=file_id, supportsAllDrives=True).execute()
                 deleted += 1
-                print(f"deleted: {f.get('name')} ({f.get('id')})")
+                print(f"deleted: {f.get('name')} ({file_id})")
             except HttpError as e:
-                print(f"warn: failed to delete {f.get('id')}: {e}")
+                print(f"warn: failed to delete {file_id}: {e}")
         page_token = resp.get('nextPageToken')
         if not page_token:
             break

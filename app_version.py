@@ -1,4 +1,4 @@
-APP_VERSION = "0.2.47"
+APP_VERSION = "0.2.48"
 UPDATE_CHANNEL = "stable"  # 'stable' | 'beta' | 'alpha'
 GITHUB_OWNER = "xtreme00zzz"
 GITHUB_REPO = "car_inspection"
