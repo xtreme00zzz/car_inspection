@@ -20,6 +20,23 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
+      - name: Verify version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          APP=$(python - << 'PY'
+          import re
+          s=open('app_version.py','r',encoding='utf-8').read()
+          m=re.search(r'APP_VERSION\s*=\s*"([0-9.]+)"', s)
+          print(m.group(1) if m else '')
+          PY
+          )
+          echo "Tag=$TAG App=$APP"
+          if [ "$TAG" != "$APP" ]; then
+            echo "Version mismatch: tag $TAG != app $APP" >&2
+            exit 1
+          fi
       - name: Checkout
         uses: actions/checkout@v4
 
