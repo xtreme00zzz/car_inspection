@@ -36,6 +36,25 @@ jobs:
         run: |
           call build\win_build_release.bat
 
+      - name: Export Drive configuration
+        shell: pwsh
+        env:
+          SA_JSON_SECRET: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          SA_JSON_VAR: ${{ vars.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          FOLDER_SECRET: ${{ secrets.GDRIVE_FOLDER_ID }}
+          FOLDER_VAR: ${{ vars.GDRIVE_FOLDER_ID }}
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:SA_JSON_SECRET)) {
+            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_SERVICE_ACCOUNT_JSON=$($env:SA_JSON_SECRET)"
+          } elseif (-not [string]::IsNullOrWhiteSpace($env:SA_JSON_VAR)) {
+            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_SERVICE_ACCOUNT_JSON=$($env:SA_JSON_VAR)"
+          }
+          if (-not [string]::IsNullOrWhiteSpace($env:FOLDER_SECRET)) {
+            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$($env:FOLDER_SECRET)"
+          } elseif (-not [string]::IsNullOrWhiteSpace($env:FOLDER_VAR)) {
+            Add-Content -Path $env:GITHUB_ENV -Value "GDRIVE_FOLDER_ID=$($env:FOLDER_VAR)"
+          }
+
       - name: Find installer
         id: find_installer
         shell: bash
@@ -45,10 +64,12 @@ jobs:
       - name: Upload installer to Google Drive (Service Account)
         id: drive
         continue-on-error: true
-        env:
-          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+        shell: pwsh
         run: |
-          python build\upload_to_drive_sa.py --file "${{ steps.find_installer.outputs.installer }}" --folder-id "${{ secrets.GDRIVE_FOLDER_ID }}"
+          if ([string]::IsNullOrWhiteSpace($env:GDRIVE_SERVICE_ACCOUNT_JSON)) {
+            Write-Host "GDRIVE_SERVICE_ACCOUNT_JSON not set; skipping Drive upload."; exit 0
+          }
+          python build\upload_to_drive_sa.py --file "${{ steps.find_installer.outputs.installer }}" --folder-id "$env:GDRIVE_FOLDER_ID"
 
       - name: Build bootstrap EXE (downloads Drive ID)
         if: ${{ steps.drive.outcome == 'success' && steps.drive.outputs.id != '' }}
